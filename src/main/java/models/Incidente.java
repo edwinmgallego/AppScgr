@@ -10,6 +10,7 @@ package models;
  */
 
 
+
 public class Incidente {
     private int id;
     private String tipo;
@@ -25,6 +26,10 @@ public class Incidente {
         this.descripcion = descripcion;
     }
 
+    // Getters y Setters para el ID (Faltaban estos)
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
     public double getLatitud() { return latitud; }
     public void setLatitud(double latitud) { this.latitud = latitud; }
     
@@ -32,5 +37,8 @@ public class Incidente {
     public void setLongitud(double longitud) { this.longitud = longitud; }
     
     public String getTipo() { return tipo; }
+    public void setTipo(String tipo) { this.tipo = tipo; }
+    
     public String getDescripcion() { return descripcion; }
+    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
 }

@@ -77,4 +77,54 @@ public class IncidenteDAO {
         
         return listaIncidentes;
     }
+    // Método UPDATE: Actualiza los detalles o coordenadas de un incidente existente
+    public boolean actualizarIncidente(Incidente incidente) {
+        String sql = "UPDATE reportes_incidentes SET tipo_incidente = ?, descripcion = ?, latitud = ?, longitud = ? WHERE id = ?";
+        
+        try (Connection conn = ConexionDB.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, incidente.getTipo());
+            pstmt.setString(2, incidente.getDescripcion());
+            pstmt.setDouble(3, incidente.getLatitud());
+            pstmt.setDouble(4, incidente.getLongitud());
+            
+            // Pasamos el ID del incidente que queremos modificar
+            pstmt.setInt(5, incidente.getId()); // Asume que la clase Incidente tiene un getId()
+            
+            int filasAfectadas = pstmt.executeUpdate();
+            return filasAfectadas > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error DAO al actualizar el incidente: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Método DELETE FÍSICO: Borra permanentemente el incidente de la base de datos
+    public boolean eliminarIncidente(int idIncidente) {
+        String sql = "DELETE FROM reportes_incidentes WHERE id = ?";
+        
+        try (Connection conn = ConexionDB.getInstance().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, idIncidente);
+            
+            int filasAfectadas = pstmt.executeUpdate();
+            return filasAfectadas > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error DAO al eliminar el incidente: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Método DELETE LÓGICO (Alternativa Recomendada para historiales de emergencia):
+    // Nota: Para usar este, los estudiantes tendrían que agregar una columna 'estado' (ACTIVO/RESUELTO) en la BD.
+    /*
+    public boolean resolverIncidente(int idIncidente) {
+        String sql = "UPDATE reportes_incidentes SET estado = 'RESUELTO' WHERE id = ?";
+        // ... (misma lógica del PreparedStatement)
+    }
+    */
 }
