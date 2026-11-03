@@ -4,6 +4,10 @@
 
 package com.mycompany.appscgr;
 
+import controllers.MapaController;
+import javax.swing.SwingUtilities;
+import views.MapaView;
+
 /**
  *
  * @author inged
@@ -11,6 +15,10 @@ package com.mycompany.appscgr;
 public class AppScgr {
 
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+     SwingUtilities.invokeLater(() -> {
+            MapaView vista = new MapaView();
+            MapaController controlador = new MapaController(vista);
+            controlador.iniciar();
+        });
     }
 }
