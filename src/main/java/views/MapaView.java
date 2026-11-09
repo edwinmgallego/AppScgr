@@ -28,6 +28,8 @@ public class MapaView extends JFrame {
     private JTextField txtLongitud;
     private JButton btnGuardar;
     private JButton btnLimpiar;
+    private JMenuItem itemRedFamiliar;
+    private JMenuItem itemCerrarSesion;
 
     public MapaView() {
         setTitle("Sistema de Asistencia en Emergencias");
@@ -85,6 +87,17 @@ public class MapaView extends JFrame {
         panelBotones.add(btnLimpiar);
         gbc.gridy = 8; panelCrud.add(panelBotones, gbc);
 
+        // --- MENÚ DE CUENTA (Equipo 1: Autenticación y Red Familiar) ---
+        JMenuBar barraMenu = new JMenuBar();
+        JMenu menuCuenta = new JMenu("Cuenta");
+        itemRedFamiliar = new JMenuItem("Mi red familiar");
+        itemCerrarSesion = new JMenuItem("Cerrar sesión");
+        menuCuenta.add(itemRedFamiliar);
+        menuCuenta.addSeparator();
+        menuCuenta.add(itemCerrarSesion);
+        barraMenu.add(menuCuenta);
+        setJMenuBar(barraMenu);
+
         // --- 3. ENSAMBLAJE DE LA VENTANA ---
         add(mapViewer, BorderLayout.CENTER);
         add(panelCrud, BorderLayout.EAST);
@@ -98,4 +111,6 @@ public class MapaView extends JFrame {
     public JTextField getTxtLongitud() { return txtLongitud; }
     public JButton getBtnGuardar() { return btnGuardar; }
     public JButton getBtnLimpiar() { return btnLimpiar; }
+    public JMenuItem getItemRedFamiliar() { return itemRedFamiliar; }
+    public JMenuItem getItemCerrarSesion() { return itemCerrarSesion; }
 }
