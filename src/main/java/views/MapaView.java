@@ -13,6 +13,8 @@ package views;
 
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.OSMTileFactoryInfo;
+import org.jxmapviewer.input.PanMouseInputListener;
+import org.jxmapviewer.input.ZoomMouseWheelListenerCursor;
 import org.jxmapviewer.viewer.DefaultTileFactory;
 import org.jxmapviewer.viewer.GeoPosition;
 import org.jxmapviewer.viewer.TileFactoryInfo;
@@ -49,6 +51,12 @@ public class MapaView extends JFrame {
         mapViewer.setTileFactory(new DefaultTileFactory(info));
         mapViewer.setZoom(7);
         mapViewer.setAddressLocation(new GeoPosition(3.4516, -76.5320)); // Cali
+
+        // JXMapViewer no trae interacción por defecto: hay que registrar el arrastre y el zoom
+        PanMouseInputListener arrastre = new PanMouseInputListener(mapViewer);
+        mapViewer.addMouseListener(arrastre);
+        mapViewer.addMouseMotionListener(arrastre);
+        mapViewer.addMouseWheelListener(new ZoomMouseWheelListenerCursor(mapViewer));
 
         // --- 2. CONFIGURACIÓN DEL FORMULARIO LATERAL (CRUD) ---
         JPanel panelCrud = new JPanel(new GridBagLayout());
