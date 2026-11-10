@@ -151,4 +151,8 @@ public class UsuarioDAO {
             return false;
         }
     }
+
+    public boolean actualizarPerfil(int id, String nombre, String telefonoFinal) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 }
