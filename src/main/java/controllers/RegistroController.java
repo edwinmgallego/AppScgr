@@ -2,6 +2,7 @@ package controllers;
 
 import models.Usuario;
 import models.dao.UsuarioDAO;
+import utils.PasswordUtil;
 import views.RegistroView;
 import javax.swing.JOptionPane;
 
@@ -13,13 +14,24 @@ import javax.swing.JOptionPane;
 public class RegistroController {
     private final RegistroView vista;
     private final UsuarioDAO usuarioDAO;
+    private final char caracterOculto; // el símbolo con que los campos esconden la contraseña (•)
     private Usuario usuarioRegistrado;
 
     public RegistroController(RegistroView vista) {
         this.vista = vista;
         this.usuarioDAO = new UsuarioDAO();
+        this.caracterOculto = vista.getTxtPassword().getEchoChar();
         vista.getBtnRegistrar().addActionListener(e -> registrar());
         vista.getBtnCancelar().addActionListener(e -> vista.dispose());
+        vista.getChkMostrarPassword().addActionListener(e -> alternarPassword());
+    }
+
+    // Muestra u oculta la contraseña y su confirmación con una sola casilla.
+    // setEchoChar((char) 0) le dice al campo que escriba el texto normal, sin símbolo que lo tape.
+    private void alternarPassword() {
+        char eco = vista.getChkMostrarPassword().isSelected() ? (char) 0 : caracterOculto;
+        vista.getTxtPassword().setEchoChar(eco);
+        vista.getTxtConfirmar().setEchoChar(eco);
     }
 
     private void registrar() {
@@ -60,8 +72,10 @@ public class RegistroController {
         if (!telefono.isEmpty() && !telefono.matches("\\+?[0-9 ]{7,20}")) {
             return "El teléfono solo puede tener números (mínimo 7).";
         }
-        if (password.length() < 6) {
-            return "La contraseña debe tener al menos 6 caracteres.";
+        // La validación de la contraseña (largo, mayúscula, minúscula y carácter especial) está en PasswordUtil
+        String errorPassword = PasswordUtil.validarFormato(password);
+        if (errorPassword != null) {
+            return errorPassword;
         }
         if (!password.equals(confirmar)) {
             return "Las contraseñas no coinciden.";
@@ -69,9 +83,14 @@ public class RegistroController {
         return null;
     }
 
-    /** Muestra la ventana (modal: espera hasta que se cierre). */
+    /** Muestra la ventana (ya no es modal: no espera; LoginController se entera cuando se cierra). */
     public void iniciar() {
         vista.setVisible(true);
+    }
+
+    /** La ventana de registro (LoginController la usa para saber cuándo se cierra). */
+    public RegistroView getVista() {
+        return vista;
     }
 
     /** Usuario creado, o null si se canceló. */

@@ -12,6 +12,7 @@ import java.awt.*;
 public class LoginView extends JFrame {
     private JTextField txtDocumento;
     private JPasswordField txtPassword;
+    private JCheckBox chkMostrarPassword;
     private JButton btnIngresar;
     private JButton btnRegistrarse;
 
@@ -39,12 +40,16 @@ public class LoginView extends JFrame {
         txtPassword = new JPasswordField(20);
         gbc.gridy = 4; panel.add(txtPassword, gbc);
 
+        // Casilla para ver u ocultar la contraseña (la lógica está en LoginController)
+        chkMostrarPassword = new JCheckBox("Mostrar contraseña");
+        gbc.gridy = 5; panel.add(chkMostrarPassword, gbc);
+
         JPanel panelBotones = new JPanel(new GridLayout(1, 2, 5, 5));
         btnIngresar = new JButton("Ingresar");
         btnRegistrarse = new JButton("Registrarse");
         panelBotones.add(btnIngresar);
         panelBotones.add(btnRegistrarse);
-        gbc.gridy = 5; gbc.insets = new Insets(15, 5, 5, 5);
+        gbc.gridy = 6; gbc.insets = new Insets(15, 5, 5, 5);
         panel.add(panelBotones, gbc);
 
         add(panel);
@@ -55,6 +60,7 @@ public class LoginView extends JFrame {
 
     public JTextField getTxtDocumento() { return txtDocumento; }
     public JPasswordField getTxtPassword() { return txtPassword; }
+    public JCheckBox getChkMostrarPassword() { return chkMostrarPassword; }
     public JButton getBtnIngresar() { return btnIngresar; }
     public JButton getBtnRegistrarse() { return btnRegistrarse; }
 }

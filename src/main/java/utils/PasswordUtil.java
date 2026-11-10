@@ -10,6 +10,30 @@ import java.security.NoSuchAlgorithmException;
  */
 public class PasswordUtil {
 
+    // Cantidad mínima de caracteres que debe tener una contraseña nueva
+    public static final int MINIMO_CARACTERES = 8;
+
+    // Revisa que la contraseña sea segura (se usa al registrar un usuario).
+    // Devuelve el mensaje de error, o null si cumple todo.
+    // Las expresiones regulares buscan, en cualquier posición de la contraseña:
+    //   \p{Lu} = una letra mayúscula, \p{Ll} = una letra minúscula,
+    //   [^\p{L}\p{N}\s] = algo que NO sea letra, número ni espacio (carácter especial, ej. @ # $ !)
+    public static String validarFormato(String password) {
+        if (password.length() < MINIMO_CARACTERES) {
+            return "La contraseña debe tener al menos " + MINIMO_CARACTERES + " caracteres.";
+        }
+        if (!password.matches(".*\\p{Lu}.*")) {
+            return "La contraseña debe tener al menos una letra mayúscula.";
+        }
+        if (!password.matches(".*\\p{Ll}.*")) {
+            return "La contraseña debe tener al menos una letra minúscula.";
+        }
+        if (!password.matches(".*[^\\p{L}\\p{N}\\s].*")) {
+            return "La contraseña debe tener al menos un carácter especial (ej. @ # $ % !).";
+        }
+        return null;
+    }
+
     // Devuelve el hash SHA-256 de la contraseña en hexadecimal
     public static String cifrar(String password) {
         try {
