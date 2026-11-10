@@ -11,7 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Consultas SQL de la tabla familiares: vincular, listar, cambiar estado y desvincular.
+ * Consultas SQL de la tabla familiares: vincular, listar, cambiar estado,
+ * contacto principal y desvincular.
  *
  * @author Equipo 1 - Autenticación y Red Familiar
  */
@@ -105,14 +106,15 @@ public class FamiliarDAO {
         }
     }
 
-    // READ: familiares de un usuario, con datos actualizados desde la tabla usuarios
+    // READ: familiares de un usuario, con datos actualizados desde la tabla usuarios.
+    // El contacto principal sale primero y el resto en orden alfabético.
     public List<Familiar> obtenerFamiliares(int usuarioId) {
         List<Familiar> lista = new ArrayList<>();
         String sql = "SELECT f.id, f.usuario_id, f.familiar_usuario_id, u.documento, "
                 + "COALESCE(u.nombre_completo, f.nombre_familiar) AS nombre, "
                 + "COALESCE(u.telefono, f.telefono) AS telefono, f.estado_emergencia "
                 + "FROM familiares f LEFT JOIN usuarios u ON u.id = f.familiar_usuario_id "
-                + "WHERE f.usuario_id = ? ORDER BY nombre";
+                + "WHERE f.usuario_id = ? ORDER BY f.es_principal DESC, nombre";
         try (PreparedStatement pstmt = conexion().prepareStatement(sql)) {
             pstmt.setInt(1, usuarioId);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -156,4 +158,63 @@ public class FamiliarDAO {
             return false;
         }
     }
-}
+
+    // Devuelve el id del vínculo marcado como contacto principal, o 0 si no hay ninguno
+    public int obtenerIdPrincipal(int usuarioId) {
+        String sql = "SELECT id FROM familiares WHERE usuario_id = ? AND es_principal = 1";
+        try (PreparedStatement pstmt = conexion().prepareStatement(sql)) {
+            pstmt.setInt(1, usuarioId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next() ? rs.getInt("id") : 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al obtener el contacto principal: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    // UPDATE con transacción: deja como principal SOLO a este familiar (los demás quedan en 0).
+    // Si el vínculo no es del usuario, se hace rollback y no cambia nada.
+    public boolean marcarPrincipal(int idFamiliar, int usuarioId) {
+        String quitarTodos = "UPDATE familiares SET es_principal = 0 WHERE usuario_id = ?";
+        String marcar = "UPDATE familiares SET es_principal = 1 WHERE id = ? AND usuario_id = ?";
+        try {
+            Connection conn = conexion();
+            conn.setAutoCommit(false); // Inicia la transacción
+            try (PreparedStatement psQuitar = conn.prepareStatement(quitarTodos);
+                 PreparedStatement psMarcar = conn.prepareStatement(marcar)) {
+                psQuitar.setInt(1, usuarioId);
+                psQuitar.executeUpdate();
+
+                psMarcar.setInt(1, idFamiliar);
+                psMarcar.setInt(2, usuarioId);
+                if (psMarcar.executeUpdate() == 0) {
+                    conn.rollback(); // Ese vínculo no existe o es de otro usuario: se deshace todo
+                    return false;
+                }
+                conn.commit(); // Todo salió bien: se guardan los cambios
+                return true;
+            } catch (SQLException e) {
+                conn.rollback(); // Algo falló: se deshace todo
+                throw e;
+            } finally {
+                conn.setAutoCommit(true); // La conexión es compartida: se deja como estaba
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al marcar el contacto principal: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // UPDATE: el usuario se queda sin contacto principal
+    public boolean quitarPrincipal(int usuarioId) {
+        String sql = "UPDATE familiares SET es_principal = 0 WHERE usuario_id = ? AND es_principal = 1";
+        try (PreparedStatement pstmt = conexion().prepareStatement(sql)) {
+            pstmt.setInt(1, usuarioId);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error DAO al quitar el contacto principal: " + e.getMessage());
+            return false;
+        }
+    }
+} 

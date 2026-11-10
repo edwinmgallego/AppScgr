@@ -13,7 +13,8 @@ import javax.swing.table.DefaultTableModel;
 
 /**
  * Controla la red familiar del usuario que inició sesión:
- * buscar usuarios, vincularlos, cambiar su estado y desvincularlos.
+ * buscar usuarios, vincularlos, cambiar su estado, marcar el contacto principal
+ * y desvincularlos.
  *
  * @author Equipo 1 - Autenticación y Red Familiar
  */
@@ -34,6 +35,7 @@ public class FamiliaresController {
         vista.getBtnVincular().addActionListener(e -> vincular());
         vista.getBtnCambiarEstado().addActionListener(e -> cambiarEstado());
         vista.getBtnDesvincular().addActionListener(e -> desvincular());
+        vista.getBtnPrincipal().addActionListener(e -> cambiarPrincipal());
         cargarFamiliares();
     }
 
@@ -151,11 +153,38 @@ public class FamiliaresController {
         }
     }
 
+    // Marca al familiar seleccionado como contacto principal; si ya lo era, pregunta si quitarlo
+    private void cambiarPrincipal() {
+        Integer idVinculo = idSeleccionado(vista.getTblFamiliares(), vista.getModeloFamiliares());
+        if (idVinculo == null) {
+            JOptionPane.showMessageDialog(vista, "Seleccione un familiar de la lista.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (idVinculo == familiarDAO.obtenerIdPrincipal(usuarioActual.getId())) {
+            int respuesta = JOptionPane.showConfirmDialog(vista, "Este familiar ya es su contacto principal.\n¿Desea quitarlo?",
+                    "Contacto principal", JOptionPane.YES_NO_OPTION);
+            if (respuesta == JOptionPane.YES_OPTION) {
+                familiarDAO.quitarPrincipal(usuarioActual.getId());
+                cargarFamiliares();
+            }
+            return;
+        }
+
+        if (familiarDAO.marcarPrincipal(idVinculo, usuarioActual.getId())) {
+            cargarFamiliares();
+            JOptionPane.showMessageDialog(vista, "Contacto principal actualizado.");
+        } else {
+            JOptionPane.showMessageDialog(vista, "No se pudo marcar como contacto principal.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     private void cargarFamiliares() {
         DefaultTableModel modelo = vista.getModeloFamiliares();
         modelo.setRowCount(0);
+        int idPrincipal = familiarDAO.obtenerIdPrincipal(usuarioActual.getId());
         for (Familiar f : familiarDAO.obtenerFamiliares(usuarioActual.getId())) {
-            modelo.addRow(new Object[]{f.getId(), f.getDocumento(), f.getNombreFamiliar(), f.getTelefono(), f.getEstadoEmergencia()});
+            modelo.addRow(new Object[]{f.getId(), f.getDocumento(), (f.getId() == idPrincipal ? "★ " : "") + f.getNombreFamiliar(), f.getTelefono(), f.getEstadoEmergencia()});
         }
     }
 
