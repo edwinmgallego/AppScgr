@@ -50,8 +50,17 @@ public class FamiliaresController {
             modelo.addRow(new Object[]{u.getId(), u.getDocumento(), u.getNombreCompleto(), u.getTelefono()});
         }
         if (encontrados.isEmpty()) {
-            JOptionPane.showMessageDialog(vista, "No se encontraron usuarios registrados con ese dato.");
+            JOptionPane.showMessageDialog(vista, mensajeSinResultados(texto), "Sin resultados", JOptionPane.INFORMATION_MESSAGE);
         }
+    }
+
+    /** Arma el mensaje que sale cuando la búsqueda no encuentra a nadie. */
+    static String mensajeSinResultados(String texto) {
+        // Si escribieron algo muy largo, se recorta para que la ventanita no quede gigante
+        String buscado = (texto.length() > 40) ? texto.substring(0, 40) + "..." : texto;
+        return "No encontramos a nadie con \"" + buscado + "\".\n\n"
+                + "• Revise que el documento o el nombre estén bien escritos.\n"
+                + "• Si su familiar todavía no tiene cuenta, pídale que se registre primero en la app.";
     }
 
     private void vincular() {
