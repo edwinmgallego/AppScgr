@@ -22,6 +22,7 @@ public class FamiliaresController {
     private final UsuarioDAO usuarioDAO;
     private final FamiliarDAO familiarDAO;
     private final Usuario usuarioActual;
+    private boolean identidadVerificada = false; // se pide una sola vez mientras esta ventana esté abierta
 
     public FamiliaresController(FamiliaresView vista) {
         this.vista = vista;
@@ -59,6 +60,10 @@ public class FamiliaresController {
             JOptionPane.showMessageDialog(vista, "Seleccione un usuario de los resultados.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        // Antes de vincular, el usuario debe demostrar que es quien dice ser
+        if (!confirmarIdentidad()) {
+            return;
+        }
         if (familiarDAO.estaVinculado(usuarioActual.getId(), idUsuario)) {
             JOptionPane.showMessageDialog(vista, "Ese usuario ya está en su red familiar.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
@@ -72,6 +77,43 @@ public class FamiliaresController {
             JOptionPane.showMessageDialog(vista, "No se pudo vincular el familiar.\nMotivo: " + familiarDAO.getUltimoError(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    // Pide un dato personal (documento o teléfono) y lo compara con el del usuario que inició sesión.
+    // Devuelve true si coincide; si cancela o se equivoca devuelve false y no se vincula a nadie.
+    private boolean confirmarIdentidad() {
+        if (identidadVerificada) {
+            return true;
+        }
+        String dato = JOptionPane.showInputDialog(vista,
+                "Para vincular un familiar debe confirmar su identidad.\nEscriba su número de documento o su teléfono:",
+                "Confirmar identidad", JOptionPane.QUESTION_MESSAGE);
+        if (dato == null) { // presionó Cancelar
+            return false;
+        }
+        if (coincideConUsuario(dato.trim())) {
+            identidadVerificada = true;
+            return true;
+        }
+        JOptionPane.showMessageDialog(vista, "El dato no coincide con su cuenta. No se vinculó al familiar.", "Identidad no confirmada", JOptionPane.ERROR_MESSAGE);
+        return false;
+    }
+
+    // Compara lo escrito con el documento o el teléfono del usuario actual
+    private boolean coincideConUsuario(String dato) {
+        if (dato.isEmpty()) {
+            return false;
+        }
+        if (dato.equals(usuarioActual.getDocumento())) {
+            return true;
+        }
+        String telefono = usuarioActual.getTelefono();
+        if (telefono == null) { // el teléfono es opcional en el registro
+            return false;
+        }
+        // Se comparan solo los dígitos para ignorar espacios o el "+" (ej. "+57 300 123" = "57300123")
+        String telefonoNumeros = telefono.replaceAll("\\D", "");
+        return !telefonoNumeros.isEmpty() && telefonoNumeros.equals(dato.replaceAll("\\D", ""));
     }
 
     private void cambiarEstado() {
