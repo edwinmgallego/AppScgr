@@ -13,6 +13,8 @@ package views;
 
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.OSMTileFactoryInfo;
+import org.jxmapviewer.input.PanMouseInputListener;
+import org.jxmapviewer.input.ZoomMouseWheelListenerCursor;
 import org.jxmapviewer.viewer.DefaultTileFactory;
 import org.jxmapviewer.viewer.GeoPosition;
 import org.jxmapviewer.viewer.TileFactoryInfo;
@@ -28,6 +30,8 @@ public class MapaView extends JFrame {
     private JTextField txtLongitud;
     private JButton btnGuardar;
     private JButton btnLimpiar;
+    private JMenuItem itemRedFamiliar;
+    private JMenuItem itemCerrarSesion;
 
     public MapaView() {
         setTitle("Sistema de Asistencia en Emergencias");
@@ -47,6 +51,12 @@ public class MapaView extends JFrame {
         mapViewer.setTileFactory(new DefaultTileFactory(info));
         mapViewer.setZoom(7);
         mapViewer.setAddressLocation(new GeoPosition(3.4516, -76.5320)); // Cali
+
+        // JXMapViewer no trae interacción por defecto: hay que registrar el arrastre y el zoom
+        PanMouseInputListener arrastre = new PanMouseInputListener(mapViewer);
+        mapViewer.addMouseListener(arrastre);
+        mapViewer.addMouseMotionListener(arrastre);
+        mapViewer.addMouseWheelListener(new ZoomMouseWheelListenerCursor(mapViewer));
 
         // --- 2. CONFIGURACIÓN DEL FORMULARIO LATERAL (CRUD) ---
         JPanel panelCrud = new JPanel(new GridBagLayout());
@@ -85,6 +95,17 @@ public class MapaView extends JFrame {
         panelBotones.add(btnLimpiar);
         gbc.gridy = 8; panelCrud.add(panelBotones, gbc);
 
+        // --- MENÚ DE CUENTA (Equipo 1: Autenticación y Red Familiar) ---
+        JMenuBar barraMenu = new JMenuBar();
+        JMenu menuCuenta = new JMenu("Cuenta");
+        itemRedFamiliar = new JMenuItem("Mi red familiar");
+        itemCerrarSesion = new JMenuItem("Cerrar sesión");
+        menuCuenta.add(itemRedFamiliar);
+        menuCuenta.addSeparator();
+        menuCuenta.add(itemCerrarSesion);
+        barraMenu.add(menuCuenta);
+        setJMenuBar(barraMenu);
+
         // --- 3. ENSAMBLAJE DE LA VENTANA ---
         add(mapViewer, BorderLayout.CENTER);
         add(panelCrud, BorderLayout.EAST);
@@ -98,4 +119,6 @@ public class MapaView extends JFrame {
     public JTextField getTxtLongitud() { return txtLongitud; }
     public JButton getBtnGuardar() { return btnGuardar; }
     public JButton getBtnLimpiar() { return btnLimpiar; }
+    public JMenuItem getItemRedFamiliar() { return itemRedFamiliar; }
+    public JMenuItem getItemCerrarSesion() { return itemCerrarSesion; }
 }
