@@ -72,9 +72,14 @@ public class RegistroController {
         return null;
     }
 
-    /** Muestra la ventana (modal: espera hasta que se cierre). */
+    /** Muestra la ventana (ya no es modal: no espera; LoginController se entera cuando se cierra). */
     public void iniciar() {
         vista.setVisible(true);
+    }
+
+    /** La ventana de registro (LoginController la usa para saber cuándo se cierra). */
+    public RegistroView getVista() {
+        return vista;
     }
 
     /** Usuario creado, o null si se canceló. */

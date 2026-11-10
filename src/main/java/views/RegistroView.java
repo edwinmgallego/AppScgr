@@ -5,11 +5,13 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Formulario de registro de un usuario nuevo (ventana modal sobre el login).
+ * Formulario de registro de un usuario nuevo. Es una ventana normal (JFrame), no una
+ * ventana emergente: LoginController oculta el login mientras esta ventana está abierta
+ * y lo vuelve a mostrar cuando se cierra.
  *
  * @author Equipo 1 - Autenticación y Red Familiar
  */
-public class RegistroView extends JDialog {
+public class RegistroView extends JFrame {
     private JTextField txtDocumento;
     private JTextField txtNombre;
     private JTextField txtTelefono;
@@ -18,9 +20,10 @@ public class RegistroView extends JDialog {
     private JButton btnRegistrar;
     private JButton btnCancelar;
 
-    public RegistroView(Frame padre) {
-        super(padre, "Registro de usuario", true);
-        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+    public RegistroView() {
+        setTitle("Registro de usuario");
+        // DISPOSE_ON_CLOSE: al cerrar solo se cierra el registro (no toda la app) y el login vuelve a aparecer
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setResizable(false);
 
         JPanel panel = new JPanel(new GridBagLayout());
@@ -60,7 +63,7 @@ public class RegistroView extends JDialog {
         add(panel);
         getRootPane().setDefaultButton(btnRegistrar);
         pack();
-        setLocationRelativeTo(padre);
+        setLocationRelativeTo(null); // centrada, en el mismo lugar donde estaba el login
     }
 
     private void agregarFila(JPanel panel, GridBagConstraints gbc, int fila, String etiqueta, JComponent campo) {
