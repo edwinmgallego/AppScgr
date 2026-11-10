@@ -17,6 +17,14 @@ import java.util.List;
  */
 public class FamiliarDAO {
 
+    // Guarda el motivo por el que falló el último vincularFamiliar (null si salió bien).
+    // Así el controlador puede explicarle al usuario qué pasó en vez de solo decir "no se pudo".
+    private String ultimoError;
+
+    public String getUltimoError() {
+        return ultimoError;
+    }
+
     private Connection conexion() throws SQLException {
         Connection conn = ConexionDB.getInstance().getConnection();
         if (conn == null) {
@@ -26,8 +34,19 @@ public class FamiliarDAO {
     }
 
     // CREATE: vincula a un usuario registrado como familiar del usuario indicado
+    // Si devuelve false, el motivo queda en getUltimoError()
     public boolean vincularFamiliar(int usuarioId, Usuario familiar) {
-        if (familiar == null || familiar.getId() == usuarioId || estaVinculado(usuarioId, familiar.getId())) {
+        ultimoError = null;
+        if (familiar == null) {
+            ultimoError = "El usuario seleccionado ya no existe en la base de datos.";
+            return false;
+        }
+        if (familiar.getId() == usuarioId) {
+            ultimoError = "No puede vincularse a usted mismo como familiar.";
+            return false;
+        }
+        if (estaVinculado(usuarioId, familiar.getId())) {
+            ultimoError = "Ese usuario ya está en su red familiar.";
             return false;
         }
         String sql = "INSERT INTO familiares (usuario_id, familiar_usuario_id, nombre_familiar, telefono) VALUES (?, ?, ?, ?)";
@@ -36,11 +55,39 @@ public class FamiliarDAO {
             pstmt.setInt(2, familiar.getId());
             pstmt.setString(3, familiar.getNombreCompleto());
             pstmt.setString(4, familiar.getTelefono());
-            return pstmt.executeUpdate() > 0;
+            if (pstmt.executeUpdate() > 0) {
+                return true;
+            }
+            ultimoError = "La base de datos no guardó el vínculo.";
+            return false;
         } catch (SQLException e) {
             System.err.println("Error DAO al vincular el familiar: " + e.getMessage());
+            ultimoError = explicarError(e);
             return false;
         }
+    }
+
+    // Traduce el error técnico de MySQL a un mensaje que el usuario pueda entender.
+    // e.getErrorCode() es el número de error de MySQL (ej. 1062 = valor duplicado).
+    private String explicarError(SQLException e) {
+        switch (e.getErrorCode()) {
+            case 1054: // columna desconocida
+            case 1146: // la tabla no existe
+                return "La base de datos no está actualizada (falta la columna familiar_usuario_id). "
+                        + "Ejecute el script sql/equipo1_red_familiar.sql en phpMyAdmin.";
+            case 1062: // llave duplicada (ya existe ese vínculo)
+                return "Ese usuario ya está en su red familiar.";
+            case 1452: // llave foránea: el usuario no existe
+                return "El usuario seleccionado ya no existe en la base de datos.";
+            default:
+                break;
+        }
+        // Sin conexión: conexion() lanza "No hay conexión..." o el driver informa un SQLState que empieza en 08
+        String estado = e.getSQLState();
+        if ((estado != null && estado.startsWith("08")) || e.getMessage().startsWith("No hay conexión")) {
+            return "No hay conexión con la base de datos. Verifique que MySQL esté encendido en XAMPP.";
+        }
+        return "Error de la base de datos: " + e.getMessage();
     }
 
     // Revisa si ya existe el vínculo para no duplicarlo

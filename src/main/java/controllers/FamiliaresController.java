@@ -68,7 +68,9 @@ public class FamiliaresController {
             JOptionPane.showMessageDialog(vista, familiar.getNombreCompleto() + " fue agregado a su red familiar.");
             cargarFamiliares();
         } else {
-            JOptionPane.showMessageDialog(vista, "No se pudo vincular el familiar.", "Error", JOptionPane.ERROR_MESSAGE);
+            // Se le explica al usuario el motivo exacto que dejó el DAO
+            JOptionPane.showMessageDialog(vista, "No se pudo vincular el familiar.\nMotivo: " + familiarDAO.getUltimoError(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
