@@ -91,16 +91,19 @@ public class MapaController {
         // EVENTO 4: Abrir la red familiar (Equipo 1)
         vista.getItemRedFamiliar().addActionListener(e -> new FamiliaresController(new FamiliaresView(vista)).iniciar());
 
-        // EVENTO 5: Cerrar sesión y volver al login (Equipo 1)
+               // EVENTO 5: Cerrar sesión y volver al login (Equipo 1), preguntando antes
         vista.getItemCerrarSesion().addActionListener(e -> {
+            int respuesta = JOptionPane.showConfirmDialog(vista, "¿Seguro que desea cerrar sesión?",
+                    "Cerrar sesión", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (respuesta != JOptionPane.YES_OPTION) {
+                return; // Dijo que no (o cerró la ventanita): se queda en el mapa
+            }
             Sesion.cerrar();
             vista.dispose();
             new LoginController(new LoginView()).iniciar();
-        });
-    }
-
+        });}
     // Método READ: Pinta los puntos de la BD en el mapa
-    private void cargarIncidentesEnMapa() {
+      private void cargarIncidentesEnMapa() {
         List<Incidente> listaIncidentes = incidenteDAO.obtenerTodosLosIncidentes();
         Set<Waypoint> waypoints = new HashSet<>();
         

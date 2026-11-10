@@ -23,11 +23,12 @@ public class FamiliaresView extends JDialog {
     private JComboBox<String> cbxEstado;
     private JButton btnCambiarEstado;
     private JButton btnDesvincular;
+    private JButton btnPrincipal;
 
     public FamiliaresView(Frame padre) {
         super(padre, "Mi red familiar", true);
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        setSize(650, 520);
+        setSize(900, 520);
         setLayout(new GridLayout(2, 1, 0, 8));
 
         // --- 1. BUSCAR USUARIOS ---
@@ -62,9 +63,11 @@ public class FamiliaresView extends JDialog {
         cbxEstado = new JComboBox<>(Familiar.ESTADOS);
         btnCambiarEstado = new JButton("Cambiar estado");
         btnDesvincular = new JButton("Desvincular");
+        btnPrincipal = new JButton("Contacto principal");
         surFamiliares.add(new JLabel("Estado:"));
         surFamiliares.add(cbxEstado);
         surFamiliares.add(btnCambiarEstado);
+        surFamiliares.add(btnPrincipal);
         surFamiliares.add(btnDesvincular);
         panelFamiliares.add(surFamiliares, BorderLayout.SOUTH);
 
@@ -101,4 +104,5 @@ public class FamiliaresView extends JDialog {
     public JComboBox<String> getCbxEstado() { return cbxEstado; }
     public JButton getBtnCambiarEstado() { return btnCambiarEstado; }
     public JButton getBtnDesvincular() { return btnDesvincular; }
+    public JButton getBtnPrincipal() { return btnPrincipal; }
 }
