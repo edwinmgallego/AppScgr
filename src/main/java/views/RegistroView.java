@@ -17,6 +17,7 @@ public class RegistroView extends JFrame {
     private JTextField txtTelefono;
     private JPasswordField txtPassword;
     private JPasswordField txtConfirmar;
+    private JCheckBox chkMostrarPassword;
     private JButton btnRegistrar;
     private JButton btnCancelar;
 
@@ -44,11 +45,16 @@ public class RegistroView extends JFrame {
         agregarFila(panel, gbc, 3, "Contraseña *:", txtPassword);
         agregarFila(panel, gbc, 4, "Confirmar contraseña *:", txtConfirmar);
 
+        // Casilla para ver u ocultar las contraseñas (la lógica está en RegistroController)
+        chkMostrarPassword = new JCheckBox("Mostrar contraseña");
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2;
+        panel.add(chkMostrarPassword, gbc);
+
         // Texto de ayuda: le muestra al usuario qué debe cumplir su contraseña
         JLabel lblAyuda = new JLabel("<html><body style='width:260px'>La contraseña debe tener mínimo "
                 + PasswordUtil.MINIMO_CARACTERES + " caracteres, una mayúscula, una minúscula y un carácter especial (ej. @ # $ !).</body></html>");
         lblAyuda.setFont(lblAyuda.getFont().deriveFont(Font.ITALIC, 11f));
-        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2;
+        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2;
         panel.add(lblAyuda, gbc);
 
         JPanel panelBotones = new JPanel(new GridLayout(1, 2, 5, 5));
@@ -56,7 +62,7 @@ public class RegistroView extends JFrame {
         btnCancelar = new JButton("Cancelar");
         panelBotones.add(btnRegistrar);
         panelBotones.add(btnCancelar);
-        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2;
+        gbc.gridx = 0; gbc.gridy = 7; gbc.gridwidth = 2;
         gbc.insets = new Insets(15, 5, 4, 5);
         panel.add(panelBotones, gbc);
 
@@ -79,6 +85,7 @@ public class RegistroView extends JFrame {
     public JTextField getTxtTelefono() { return txtTelefono; }
     public JPasswordField getTxtPassword() { return txtPassword; }
     public JPasswordField getTxtConfirmar() { return txtConfirmar; }
+    public JCheckBox getChkMostrarPassword() { return chkMostrarPassword; }
     public JButton getBtnRegistrar() { return btnRegistrar; }
     public JButton getBtnCancelar() { return btnCancelar; }
 }

@@ -14,13 +14,24 @@ import javax.swing.JOptionPane;
 public class RegistroController {
     private final RegistroView vista;
     private final UsuarioDAO usuarioDAO;
+    private final char caracterOculto; // el símbolo con que los campos esconden la contraseña (•)
     private Usuario usuarioRegistrado;
 
     public RegistroController(RegistroView vista) {
         this.vista = vista;
         this.usuarioDAO = new UsuarioDAO();
+        this.caracterOculto = vista.getTxtPassword().getEchoChar();
         vista.getBtnRegistrar().addActionListener(e -> registrar());
         vista.getBtnCancelar().addActionListener(e -> vista.dispose());
+        vista.getChkMostrarPassword().addActionListener(e -> alternarPassword());
+    }
+
+    // Muestra u oculta la contraseña y su confirmación con una sola casilla.
+    // setEchoChar((char) 0) le dice al campo que escriba el texto normal, sin símbolo que lo tape.
+    private void alternarPassword() {
+        char eco = vista.getChkMostrarPassword().isSelected() ? (char) 0 : caracterOculto;
+        vista.getTxtPassword().setEchoChar(eco);
+        vista.getTxtConfirmar().setEchoChar(eco);
     }
 
     private void registrar() {

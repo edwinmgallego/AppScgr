@@ -19,12 +19,22 @@ import javax.swing.JOptionPane;
 public class LoginController {
     private final LoginView vista;
     private final UsuarioDAO usuarioDAO;
+    private final char caracterOculto; // el símbolo con que el campo esconde la contraseña (•)
 
     public LoginController(LoginView vista) {
         this.vista = vista;
         this.usuarioDAO = new UsuarioDAO();
+        this.caracterOculto = vista.getTxtPassword().getEchoChar();
         vista.getBtnIngresar().addActionListener(e -> ingresar());
         vista.getBtnRegistrarse().addActionListener(e -> abrirRegistro());
+        vista.getChkMostrarPassword().addActionListener(e -> alternarPassword());
+    }
+
+    // Muestra u oculta la contraseña según la casilla.
+    // setEchoChar((char) 0) le dice al campo que escriba el texto normal, sin símbolo que lo tape.
+    private void alternarPassword() {
+        boolean mostrar = vista.getChkMostrarPassword().isSelected();
+        vista.getTxtPassword().setEchoChar(mostrar ? (char) 0 : caracterOculto);
     }
 
     private void ingresar() {
