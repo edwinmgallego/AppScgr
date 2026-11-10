@@ -2,6 +2,7 @@ package controllers;
 
 import models.Usuario;
 import models.dao.UsuarioDAO;
+import utils.PasswordUtil;
 import views.RegistroView;
 import javax.swing.JOptionPane;
 
@@ -60,8 +61,10 @@ public class RegistroController {
         if (!telefono.isEmpty() && !telefono.matches("\\+?[0-9 ]{7,20}")) {
             return "El teléfono solo puede tener números (mínimo 7).";
         }
-        if (password.length() < 6) {
-            return "La contraseña debe tener al menos 6 caracteres.";
+        // La validación de la contraseña (largo, mayúscula, minúscula y carácter especial) está en PasswordUtil
+        String errorPassword = PasswordUtil.validarFormato(password);
+        if (errorPassword != null) {
+            return errorPassword;
         }
         if (!password.equals(confirmar)) {
             return "Las contraseñas no coinciden.";

@@ -1,5 +1,6 @@
 package views;
 
+import utils.PasswordUtil;
 import javax.swing.*;
 import java.awt.*;
 
@@ -37,15 +38,22 @@ public class RegistroView extends JDialog {
         agregarFila(panel, gbc, 0, "Documento *:", txtDocumento);
         agregarFila(panel, gbc, 1, "Nombre completo *:", txtNombre);
         agregarFila(panel, gbc, 2, "Teléfono:", txtTelefono);
-        agregarFila(panel, gbc, 3, "Contraseña * (mín. 6):", txtPassword);
+        agregarFila(panel, gbc, 3, "Contraseña *:", txtPassword);
         agregarFila(panel, gbc, 4, "Confirmar contraseña *:", txtConfirmar);
+
+        // Texto de ayuda: le muestra al usuario qué debe cumplir su contraseña
+        JLabel lblAyuda = new JLabel("<html><body style='width:260px'>La contraseña debe tener mínimo "
+                + PasswordUtil.MINIMO_CARACTERES + " caracteres, una mayúscula, una minúscula y un carácter especial (ej. @ # $ !).</body></html>");
+        lblAyuda.setFont(lblAyuda.getFont().deriveFont(Font.ITALIC, 11f));
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2;
+        panel.add(lblAyuda, gbc);
 
         JPanel panelBotones = new JPanel(new GridLayout(1, 2, 5, 5));
         btnRegistrar = new JButton("Registrar");
         btnCancelar = new JButton("Cancelar");
         panelBotones.add(btnRegistrar);
         panelBotones.add(btnCancelar);
-        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2;
+        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2;
         gbc.insets = new Insets(15, 5, 4, 5);
         panel.add(panelBotones, gbc);
 
