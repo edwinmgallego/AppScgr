@@ -44,7 +44,8 @@ public class ConexionDB {
     public static ConexionDB getInstance() {
         try {
             // Si la instancia no existe o la conexión se cerró inesperadamente, se crea una nueva
-            if (instancia == null || instancia.getConnection().isClosed()) {
+            // (Si la conexión anterior falló, getConnection() es null y también se reintenta)
+            if (instancia == null || instancia.getConnection() == null || instancia.getConnection().isClosed()) {
                 instancia = new ConexionDB();
             }
         } catch (SQLException e) {
