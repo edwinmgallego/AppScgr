@@ -11,6 +11,7 @@ package views;
 
 
 
+import config.ConfiguracionMapa;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.OSMTileFactoryInfo;
 import org.jxmapviewer.input.PanMouseInputListener;
@@ -35,7 +36,7 @@ public class MapaView extends JFrame {
 
     public MapaView() {
         setTitle("Sistema de Asistencia en Emergencias");
-        System.setProperty("http.agent", "AppScgr-POO-Cali/1.0");
+        System.setProperty("http.agent", ConfiguracionMapa.USER_AGENT);
         setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -45,12 +46,12 @@ public class MapaView extends JFrame {
         TileFactoryInfo info = new OSMTileFactoryInfo() {
             @Override
             public String getTileUrl(int x, int y, int zoom) {
-                return super.getTileUrl(x, y, zoom).replace("http://", "https://");
+                return ConfiguracionMapa.aHttps(super.getTileUrl(x, y, zoom));
             }
         };
         mapViewer.setTileFactory(new DefaultTileFactory(info));
-        mapViewer.setZoom(7);
-        mapViewer.setAddressLocation(new GeoPosition(3.4516, -76.5320)); // Cali
+        mapViewer.setZoom(ConfiguracionMapa.ZOOM_INICIAL);
+        mapViewer.setAddressLocation(new GeoPosition(ConfiguracionMapa.CALI_LATITUD, ConfiguracionMapa.CALI_LONGITUD)); // Cali
 
         // JXMapViewer no trae interacción por defecto: hay que registrar el arrastre y el zoom
         PanMouseInputListener arrastre = new PanMouseInputListener(mapViewer);
