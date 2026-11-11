@@ -77,7 +77,7 @@ public class MapaController {
                     limpiarFormulario();
                     cargarIncidentesEnMapa(); // Refrescar los pines
                 } else {
-                    JOptionPane.showMessageDialog(vista, "Error al guardar en la base de datos.", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(vista, "Error al guardar en la base de datos. ", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
