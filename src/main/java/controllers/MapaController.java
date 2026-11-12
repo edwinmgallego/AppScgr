@@ -12,32 +12,42 @@ package controllers;
 
 import config.Sesion;
 import models.Incidente;
+import models.MarcadorMapa;
+import models.TipoMarcador;
 import models.dao.IncidenteDAO;
 import views.FamiliaresView;
 import views.LoginView;
 import views.MapaView;
+import views.MarcadorRenderer;
+import views.MarcadorWaypoint;
 
-import org.jxmapviewer.viewer.DefaultWaypoint;
 import org.jxmapviewer.viewer.GeoPosition;
-import org.jxmapviewer.viewer.Waypoint;
 import org.jxmapviewer.viewer.WaypointPainter;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import javax.swing.JOptionPane;
 
 public class MapaController {
     private MapaView vista;
     private IncidenteDAO incidenteDAO;
+    private final WaypointPainter<MarcadorWaypoint> pintorMarcadores = new WaypointPainter<>();
+    private final List<MarcadorMapa> marcadoresIncidentes = new ArrayList<>();
+    private MarcadorMapa puntoSeleccionado;
+    private final List<SeleccionListener> oyentesSeleccion = new ArrayList<>();
 
     public MapaController(MapaView vista) {
         this.vista = vista;
         this.incidenteDAO = new IncidenteDAO();
+        pintorMarcadores.setRenderer(new MarcadorRenderer());
+        vista.getMapViewer().setOverlayPainter(pintorMarcadores);
         inicializarEventos();
         cargarIncidentesEnMapa();
     }
@@ -50,8 +60,11 @@ public class MapaController {
                 if (e.getButton() == MouseEvent.BUTTON1) { // Solo clic izquierdo
                     // Convertir el punto del píxel de la pantalla a coordenadas GPS
                     GeoPosition posicion = vista.getMapViewer().convertPointToGeoPosition(e.getPoint());
+                    // Al arrastrar el mapa, la longitud puede salirse de [-180, 180]
+                    double longitud = MarcadorMapa.normalizarLongitud(posicion.getLongitude());
                     vista.getTxtLatitud().setText(String.valueOf(posicion.getLatitude()));
-                    vista.getTxtLongitud().setText(String.valueOf(posicion.getLongitude()));
+                    vista.getTxtLongitud().setText(String.valueOf(longitud));
+                    seleccionarPunto(posicion.getLatitude(), longitud);
                 }
             }
         });
@@ -102,19 +115,54 @@ public class MapaController {
             vista.dispose();
             new LoginController(new LoginView()).iniciar();
         });}
-    // Método READ: Pinta los puntos de la BD en el mapa
-      private void cargarIncidentesEnMapa() {
-        List<Incidente> listaIncidentes = incidenteDAO.obtenerTodosLosIncidentes();
-        Set<Waypoint> waypoints = new HashSet<>();
-        
-        for (Incidente inc : listaIncidentes) {
-            waypoints.add(new DefaultWaypoint(new GeoPosition(inc.getLatitud(), inc.getLongitud())));
+    // Método READ: Pinta en el mapa los incidentes de la BD, cada tipo con su color
+    private void cargarIncidentesEnMapa() {
+        marcadoresIncidentes.clear();
+        for (Incidente inc : incidenteDAO.obtenerTodosLosIncidentes()) {
+            try {
+                marcadoresIncidentes.add(MarcadorMapa.desdeIncidente(inc));
+            } catch (IllegalArgumentException ex) {
+                // Un registro con coordenadas inválidas no debe impedir pintar los demás
+                System.err.println("Incidente " + inc.getId() + " omitido: " + ex.getMessage());
+            }
         }
-        
-        WaypointPainter<Waypoint> waypointPainter = new WaypointPainter<>();
-        waypointPainter.setWaypoints(waypoints);
-        vista.getMapViewer().setOverlayPainter(waypointPainter);
+        pintarMarcadores();
+    }
+
+    private void pintarMarcadores() {
+        Set<MarcadorWaypoint> waypoints = new HashSet<>();
+        for (MarcadorMapa marcador : marcadoresIncidentes) {
+            waypoints.add(new MarcadorWaypoint(marcador));
+        }
+        if (puntoSeleccionado != null) {
+            waypoints.add(new MarcadorWaypoint(puntoSeleccionado));
+        }
+        pintorMarcadores.setWaypoints(waypoints);
         vista.getMapViewer().repaint();
+    }
+
+    /** Marca el punto clicado en el mapa y avisa a quienes necesiten sus coordenadas. */
+    private void seleccionarPunto(double latitud, double longitud) {
+        puntoSeleccionado = new MarcadorMapa(latitud, longitud, TipoMarcador.SELECCION);
+        pintarMarcadores();
+        for (SeleccionListener oyente : List.copyOf(oyentesSeleccion)) {
+            oyente.alSeleccionar(latitud, longitud);
+        }
+    }
+
+    private void limpiarSeleccion() {
+        if (puntoSeleccionado != null) {
+            puntoSeleccionado = null;
+            pintarMarcadores();
+            for (SeleccionListener oyente : List.copyOf(oyentesSeleccion)) {
+                oyente.alLimpiarSeleccion();
+            }
+        }
+    }
+
+    /** Punto de enganche para otros módulos que necesiten las coordenadas del clic. */
+    public void addSeleccionListener(SeleccionListener oyente) {
+        oyentesSeleccion.add(Objects.requireNonNull(oyente, "El oyente es obligatorio."));
     }
 
     private void limpiarFormulario() {
@@ -122,6 +170,7 @@ public class MapaController {
         vista.getTxtDescripcion().setText("");
         vista.getTxtLatitud().setText("");
         vista.getTxtLongitud().setText("");
+        limpiarSeleccion();
     }
 
     public void iniciar() {
