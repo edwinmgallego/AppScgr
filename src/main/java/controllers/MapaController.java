@@ -13,6 +13,7 @@ package controllers;
 import config.Sesion;
 import models.Incidente;
 import models.MarcadorMapa;
+import models.TipoMarcador;
 import models.dao.IncidenteDAO;
 import views.FamiliaresView;
 import views.LoginView;
@@ -30,6 +31,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import javax.swing.JOptionPane;
 
@@ -38,6 +40,8 @@ public class MapaController {
     private IncidenteDAO incidenteDAO;
     private final WaypointPainter<MarcadorWaypoint> pintorMarcadores = new WaypointPainter<>();
     private final List<MarcadorMapa> marcadoresIncidentes = new ArrayList<>();
+    private MarcadorMapa puntoSeleccionado;
+    private final List<SeleccionListener> oyentesSeleccion = new ArrayList<>();
 
     public MapaController(MapaView vista) {
         this.vista = vista;
@@ -56,8 +60,11 @@ public class MapaController {
                 if (e.getButton() == MouseEvent.BUTTON1) { // Solo clic izquierdo
                     // Convertir el punto del píxel de la pantalla a coordenadas GPS
                     GeoPosition posicion = vista.getMapViewer().convertPointToGeoPosition(e.getPoint());
+                    // Al arrastrar el mapa, la longitud puede salirse de [-180, 180]
+                    double longitud = MarcadorMapa.normalizarLongitud(posicion.getLongitude());
                     vista.getTxtLatitud().setText(String.valueOf(posicion.getLatitude()));
-                    vista.getTxtLongitud().setText(String.valueOf(posicion.getLongitude()));
+                    vista.getTxtLongitud().setText(String.valueOf(longitud));
+                    seleccionarPunto(posicion.getLatitude(), longitud);
                 }
             }
         });
@@ -127,8 +134,35 @@ public class MapaController {
         for (MarcadorMapa marcador : marcadoresIncidentes) {
             waypoints.add(new MarcadorWaypoint(marcador));
         }
+        if (puntoSeleccionado != null) {
+            waypoints.add(new MarcadorWaypoint(puntoSeleccionado));
+        }
         pintorMarcadores.setWaypoints(waypoints);
         vista.getMapViewer().repaint();
+    }
+
+    /** Marca el punto clicado en el mapa y avisa a quienes necesiten sus coordenadas. */
+    private void seleccionarPunto(double latitud, double longitud) {
+        puntoSeleccionado = new MarcadorMapa(latitud, longitud, TipoMarcador.SELECCION);
+        pintarMarcadores();
+        for (SeleccionListener oyente : List.copyOf(oyentesSeleccion)) {
+            oyente.alSeleccionar(latitud, longitud);
+        }
+    }
+
+    private void limpiarSeleccion() {
+        if (puntoSeleccionado != null) {
+            puntoSeleccionado = null;
+            pintarMarcadores();
+            for (SeleccionListener oyente : List.copyOf(oyentesSeleccion)) {
+                oyente.alLimpiarSeleccion();
+            }
+        }
+    }
+
+    /** Punto de enganche para otros módulos que necesiten las coordenadas del clic. */
+    public void addSeleccionListener(SeleccionListener oyente) {
+        oyentesSeleccion.add(Objects.requireNonNull(oyente, "El oyente es obligatorio."));
     }
 
     private void limpiarFormulario() {
@@ -136,6 +170,7 @@ public class MapaController {
         vista.getTxtDescripcion().setText("");
         vista.getTxtLatitud().setText("");
         vista.getTxtLongitud().setText("");
+        limpiarSeleccion();
     }
 
     public void iniciar() {
