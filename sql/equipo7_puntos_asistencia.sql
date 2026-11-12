@@ -1,18 +1,12 @@
--- =====================================================================
--- Equipo 7: Puntos de Asistencia y Negocios (RF-09, RF-10)
--- Ejecutar UNA vez sobre emergencias_db (phpMyAdmin > pestaña SQL).
--- =====================================================================
 USE emergencias_db;
 
--- 1. Centro de acopio como tipo de punto + datos para mostrar en el mapa
 ALTER TABLE puntos_asistencia
     MODIFY COLUMN tipo_punto
         ENUM('ALBERGUE','SUPERMERCADO','MECANICO','HOSPITAL','CENTRO_ACOPIO') NOT NULL,
-    ADD COLUMN direccion VARCHAR(150) NULL AFTER nombre,
-    ADD COLUMN descripcion VARCHAR(255) NULL AFTER direccion;
+    ADD COLUMN IF NOT EXISTS direccion VARCHAR(150) NULL,
+    ADD COLUMN IF NOT EXISTS descripcion VARCHAR(255) NULL;
 
--- 2. Un servicio por fila (agua, internet, alimentación...)
-CREATE TABLE servicios_punto (
+CREATE TABLE IF NOT EXISTS servicios_punto (
     id INT(11) NOT NULL AUTO_INCREMENT,
     punto_id INT(11) NOT NULL,
     servicio ENUM('AGUA','INTERNET','ALIMENTACION','ENERGIA','ATENCION_MEDICA') NOT NULL,
@@ -21,10 +15,9 @@ CREATE TABLE servicios_punto (
     UNIQUE KEY uk_servicio_punto (punto_id, servicio),
     CONSTRAINT fk_servicio_punto FOREIGN KEY (punto_id)
         REFERENCES puntos_asistencia (id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
--- 3. Necesidad de voluntarios de cada punto
-CREATE TABLE necesidades_voluntarios (
+CREATE TABLE IF NOT EXISTS necesidades_voluntarios (
     id INT(11) NOT NULL AUTO_INCREMENT,
     punto_id INT(11) NOT NULL,
     perfil VARCHAR(100) NOT NULL,
@@ -34,4 +27,4 @@ CREATE TABLE necesidades_voluntarios (
     PRIMARY KEY (id),
     CONSTRAINT fk_necesidad_punto FOREIGN KEY (punto_id)
         REFERENCES puntos_asistencia (id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
