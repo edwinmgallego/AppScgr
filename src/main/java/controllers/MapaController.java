@@ -12,20 +12,22 @@ package controllers;
 
 import config.Sesion;
 import models.Incidente;
+import models.MarcadorMapa;
 import models.dao.IncidenteDAO;
 import views.FamiliaresView;
 import views.LoginView;
 import views.MapaView;
+import views.MarcadorRenderer;
+import views.MarcadorWaypoint;
 
-import org.jxmapviewer.viewer.DefaultWaypoint;
 import org.jxmapviewer.viewer.GeoPosition;
-import org.jxmapviewer.viewer.Waypoint;
 import org.jxmapviewer.viewer.WaypointPainter;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,10 +36,14 @@ import javax.swing.JOptionPane;
 public class MapaController {
     private MapaView vista;
     private IncidenteDAO incidenteDAO;
+    private final WaypointPainter<MarcadorWaypoint> pintorMarcadores = new WaypointPainter<>();
+    private final List<MarcadorMapa> marcadoresIncidentes = new ArrayList<>();
 
     public MapaController(MapaView vista) {
         this.vista = vista;
         this.incidenteDAO = new IncidenteDAO();
+        pintorMarcadores.setRenderer(new MarcadorRenderer());
+        vista.getMapViewer().setOverlayPainter(pintorMarcadores);
         inicializarEventos();
         cargarIncidentesEnMapa();
     }
@@ -102,18 +108,26 @@ public class MapaController {
             vista.dispose();
             new LoginController(new LoginView()).iniciar();
         });}
-    // Método READ: Pinta los puntos de la BD en el mapa
-      private void cargarIncidentesEnMapa() {
-        List<Incidente> listaIncidentes = incidenteDAO.obtenerTodosLosIncidentes();
-        Set<Waypoint> waypoints = new HashSet<>();
-        
-        for (Incidente inc : listaIncidentes) {
-            waypoints.add(new DefaultWaypoint(new GeoPosition(inc.getLatitud(), inc.getLongitud())));
+    // Método READ: Pinta en el mapa los incidentes de la BD, cada tipo con su color
+    private void cargarIncidentesEnMapa() {
+        marcadoresIncidentes.clear();
+        for (Incidente inc : incidenteDAO.obtenerTodosLosIncidentes()) {
+            try {
+                marcadoresIncidentes.add(MarcadorMapa.desdeIncidente(inc));
+            } catch (IllegalArgumentException ex) {
+                // Un registro con coordenadas inválidas no debe impedir pintar los demás
+                System.err.println("Incidente " + inc.getId() + " omitido: " + ex.getMessage());
+            }
         }
-        
-        WaypointPainter<Waypoint> waypointPainter = new WaypointPainter<>();
-        waypointPainter.setWaypoints(waypoints);
-        vista.getMapViewer().setOverlayPainter(waypointPainter);
+        pintarMarcadores();
+    }
+
+    private void pintarMarcadores() {
+        Set<MarcadorWaypoint> waypoints = new HashSet<>();
+        for (MarcadorMapa marcador : marcadoresIncidentes) {
+            waypoints.add(new MarcadorWaypoint(marcador));
+        }
+        pintorMarcadores.setWaypoints(waypoints);
         vista.getMapViewer().repaint();
     }
 
