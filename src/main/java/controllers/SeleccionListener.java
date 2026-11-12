@@ -8,7 +8,7 @@ package controllers;
  * Oyente del punto que el usuario selecciona con un clic en el mapa. Es el punto de
  * enganche para módulos que necesitan esas coordenadas.
  *
- * @author Equipo 3 - Core del mapa y cierres viales
+ * @author equipo3/samuellopez
  */
 public interface SeleccionListener {
 

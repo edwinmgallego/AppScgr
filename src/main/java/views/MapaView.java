@@ -110,6 +110,7 @@ public class MapaView extends JFrame {
         // --- 3. ENSAMBLAJE DE LA VENTANA ---
         add(mapViewer, BorderLayout.CENTER);
         add(panelCrud, BorderLayout.EAST);
+        add(new LeyendaMapaPanel(), BorderLayout.SOUTH);
     }
 
     // Getters para que el Controlador pueda acceder a los datos de la vista
