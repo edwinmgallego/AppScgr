@@ -50,6 +50,70 @@ public class DañoEstructuralDAO {
         return -1;
     }
  
+    // Método READ: un daño por su id
+    public DañoEstructural buscarPorId(int id) {
+        List<DañoEstructural> lista = consultar(" AND id = ?", id);
+        return lista.isEmpty() ? null : lista.get(0);
+    }
+ 
+    // Método READ: todos los daños
+    public List<DañoEstructural> listar() {
+        return consultar(" ORDER BY id DESC");
+    }
+ 
+    // Sobrecarga: solo los daños de un tipo
+    public List<DañoEstructural> listar(TipoDaño tipo) {
+        return consultar(" AND descripcion LIKE ? ORDER BY id DESC", "daño=" + tipo.name() + " |%");
+    }
+ 
+    // Sobrecarga: solo los daños de un barrio
+    public List<DañoEstructural> listar(String barrio) {
+        List<DañoEstructural> resultado = new ArrayList<>();
+        for (DañoEstructural d : listar()) {
+            if (d.getBarrio().equalsIgnoreCase(barrio.trim())) {
+                resultado.add(d);
+            }
+        }
+        return resultado;
+    }
+ 
+    // Sobrecarga: los que tengan ese riesgo o mas
+    public List<DañoEstructural> listar(NivelRiesgo minimo) {
+        List<DañoEstructural> resultado = new ArrayList<>();
+        for (DañoEstructural d : listar()) {
+            if (d.calcularNivelRiesgo().esAlMenos(minimo)) {
+                resultado.add(d);
+            }
+        }
+        return resultado;
+    }
+ 
+    // Hace el SELECT y vuelve cada fila un objeto
+    private List<DañoEstructural> consultar(String filtro, Object... parametros) {
+        List<DañoEstructural> lista = new ArrayList<>();
+        String sql = "SELECT id, usuario_id, descripcion, latitud, longitud FROM reportes_incidentes "
+                   + "WHERE tipo_incidente = ?" + filtro;
+        try (PreparedStatement ps = conexion().prepareStatement(sql)) {
+            ps.setString(1, TIPO);
+            for (int i = 0; i < parametros.length; i++) {
+                ps.setObject(i + 2, parametros[i]);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    try {
+                        lista.add(FormatoDescripcion.crear(rs.getInt("id"), rs.getInt("usuario_id"),
+                                rs.getDouble("latitud"), rs.getDouble("longitud"), rs.getString("descripcion")));
+                    } catch (IllegalArgumentException e) {
+                        // si no tiene nuestro formato la saltamos
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al consultar daños: " + e.getMessage());
+        }
+        return lista;
+    }
+ 
     // La conexión es compartida (Singleton), por eso no la cerramos
     private Connection conexion() {
         return ConexionDB.getInstance().getConnection();
