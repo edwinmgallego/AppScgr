@@ -21,8 +21,8 @@ import org.jxmapviewer.viewer.GeoPosition;
 import org.jxmapviewer.viewer.TileFactoryInfo;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-
 
 public class DañosEstructuralesView extends JFrame {
 
@@ -54,11 +54,14 @@ public class DañosEstructuralesView extends JFrame {
     private JTextField txtPotencia;
     private JCheckBox chkServicioCritico;
 
-    // Botones
+    // Botones, filtro y tabla
     private JButton btnGuardar;
     private JButton btnActualizar;
     private JButton btnEliminar;
     private JButton btnLimpiar;
+    private JComboBox<Object> cbxFiltro;
+    private JTable tabla;
+    private DefaultTableModel modeloTabla;
 
     public DañosEstructuralesView() {
         setTitle("AppScgr - Daños estructurales (Equipo 6)");
@@ -175,9 +178,36 @@ public class DañosEstructuralesView extends JFrame {
         panelIzquierdo.add(formulario, BorderLayout.NORTH);
         panelIzquierdo.setPreferredSize(new Dimension(380, 0));
 
-        // 5. Armar la ventana
+        // 5. Filtro y tabla de reportes
+        cbxFiltro = new JComboBox<>();
+        cbxFiltro.addItem("Todos");
+        for (TipoDaño tipo : TipoDaño.values()) {
+            cbxFiltro.addItem(tipo);
+        }
+        JPanel panelFiltro = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panelFiltro.add(new JLabel("Ver:"));
+        panelFiltro.add(cbxFiltro);
+
+        String[] columnas = {"ID", "Tipo", "Barrio", "Dirección", "Detalle", "Riesgo"};
+        modeloTabla = new DefaultTableModel(columnas, 0) {
+            @Override
+            public boolean isCellEditable(int fila, int columna) {
+                return false; // que no se pueda editar
+            }
+        };
+        tabla = new JTable(modeloTabla);
+        tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        JPanel panelTabla = new JPanel(new BorderLayout());
+        panelTabla.setBorder(BorderFactory.createTitledBorder("Reportes"));
+        panelTabla.add(panelFiltro, BorderLayout.NORTH);
+        panelTabla.add(new JScrollPane(tabla), BorderLayout.CENTER);
+        panelTabla.setPreferredSize(new Dimension(0, 230));
+
+        // 6. Armar la ventana
         JPanel panelDerecho = new JPanel(new BorderLayout());
         panelDerecho.add(mapViewer, BorderLayout.CENTER);
+        panelDerecho.add(panelTabla, BorderLayout.SOUTH);
 
         add(new JScrollPane(panelIzquierdo), BorderLayout.WEST);
         add(panelDerecho, BorderLayout.CENTER);
@@ -280,5 +310,17 @@ public class DañosEstructuralesView extends JFrame {
 
     public JButton getBtnLimpiar() {
         return btnLimpiar;
+    }
+
+    public JComboBox<Object> getCbxFiltro() {
+        return cbxFiltro;
+    }
+
+    public JTable getTabla() {
+        return tabla;
+    }
+
+    public DefaultTableModel getModeloTabla() {
+        return modeloTabla;
     }
 }
