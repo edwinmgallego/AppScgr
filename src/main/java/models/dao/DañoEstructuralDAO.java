@@ -22,11 +22,12 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
  
-public class DañoEstructuralDAO {
+public class DañoEstructuralDAO implements CrudDAO<DañoEstructural> {
  
     private static final String TIPO = FormatoDescripcion.TIPO_INCIDENTE;
  
     // Método CREATE
+    @Override
     public int insertar(DañoEstructural daño) {
         String sql = "INSERT INTO reportes_incidentes (usuario_id, tipo_incidente, descripcion, latitud, longitud) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conexion().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -51,12 +52,14 @@ public class DañoEstructuralDAO {
     }
  
     // Método READ: un daño por su id
+    @Override
     public DañoEstructural buscarPorId(int id) {
         List<DañoEstructural> lista = consultar(" AND id = ?", id);
         return lista.isEmpty() ? null : lista.get(0);
     }
  
     // Método READ: todos los daños
+    @Override
     public List<DañoEstructural> listar() {
         return consultar(" ORDER BY id DESC");
     }
@@ -86,6 +89,39 @@ public class DañoEstructuralDAO {
             }
         }
         return resultado;
+    }
+ 
+    // Método UPDATE: con el LIKE no se puede cambiar el tipo de daño
+    @Override
+    public boolean actualizar(DañoEstructural daño) {
+        String sql = "UPDATE reportes_incidentes SET descripcion = ?, latitud = ?, longitud = ? "
+                   + "WHERE id = ? AND tipo_incidente = ? AND descripcion LIKE ?";
+        try (PreparedStatement ps = conexion().prepareStatement(sql)) {
+            ps.setString(1, FormatoDescripcion.codificar(daño));
+            ps.setDouble(2, daño.getLatitud());
+            ps.setDouble(3, daño.getLongitud());
+            ps.setInt(4, daño.getId());
+            ps.setString(5, TIPO);
+            ps.setString(6, "daño=" + daño.getTipoDaño().name() + " |%");
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error DAO al actualizar daño: " + e.getMessage());
+            return false;
+        }
+    }
+ 
+    // Método DELETE: solo borra los de nuestro modulo
+    @Override
+    public boolean eliminar(int id) {
+        String sql = "DELETE FROM reportes_incidentes WHERE id = ? AND tipo_incidente = ? AND descripcion LIKE 'daño=%'";
+        try (PreparedStatement ps = conexion().prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.setString(2, TIPO);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error DAO al eliminar daño: " + e.getMessage());
+            return false;
+        }
     }
  
     // Hace el SELECT y vuelve cada fila un objeto
