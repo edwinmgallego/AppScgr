@@ -39,6 +39,41 @@ public class FormatoDescripcion {
         return texto + " | nota=" + limpiar(daño.getDescripcion());
     }
  
+    // Texto -> pares clave=valor
+    public static Map<String, String> leer(String texto) {
+        Map<String, String> datos = new HashMap<>();
+        for (String parte : texto.split(" \\| ")) {
+            int igual = parte.indexOf('=');
+            if (igual > 0) {
+                datos.put(parte.substring(0, igual), parte.substring(igual + 1));
+            }
+        }
+        return datos;
+    }
+ 
+    // Texto -> objeto
+    public static DañoEstructural crear(int id, int usuarioId, double latitud, double longitud, String texto) {
+        Map<String, String> d = leer(texto);
+        try {
+            DañoEstructural daño = switch (TipoDaño.valueOf(d.get("daño"))) {
+                case GRIETA -> new Grieta(usuarioId, d.get("direccion"), d.get("barrio"), latitud, longitud,
+                        d.get("nota"), d.get("elemento"),
+                        Double.parseDouble(d.get("ancho")), Double.parseDouble(d.get("largo")));
+                case TANQUE_AGUA -> new FallaTanque(usuarioId, d.get("direccion"), d.get("barrio"), latitud, longitud,
+                        d.get("nota"), d.get("falla"),
+                        Integer.parseInt(d.get("capacidad")), Boolean.parseBoolean(d.get("elevado")));
+                case GENERADOR -> new DañoGenerador(usuarioId, d.get("direccion"), d.get("barrio"), latitud, longitud,
+                        d.get("nota"), d.get("falla"),
+                        Double.parseDouble(d.get("potencia")), Boolean.parseBoolean(d.get("critico")));
+            };
+            daño.setId(id);
+            return daño;
+        } catch (RuntimeException e) {
+            // pasa si alguien escribio el daño desde otra pantalla
+            throw new IllegalArgumentException("La descripción no tiene el formato del módulo de daños");
+        }
+    }
+ 
     // Quita las | para que no se dañe el formato
     private static String limpiar(String texto) {
         return texto == null ? "" : texto.replace("|", "/");
