@@ -20,8 +20,8 @@ public abstract class DañoEstructural implements EvaluableRiesgo {
  
     public DañoEstructural(int usuarioId, String direccion, String barrio, double latitud, double longitud, String descripcion) {
         this.usuarioId = usuarioId;
-        this.direccion = direccion;
-        this.barrio = barrio;
+        setDireccion(direccion);
+        setBarrio(barrio);
         this.latitud = latitud;
         this.longitud = longitud;
         this.descripcion = descripcion;
@@ -39,10 +39,20 @@ public abstract class DañoEstructural implements EvaluableRiesgo {
     public void setUsuarioId(int usuarioId) { this.usuarioId = usuarioId; }
  
     public String getDireccion() { return direccion; }
-    public void setDireccion(String direccion) { this.direccion = direccion; }
+    public void setDireccion(String direccion) {
+        if (direccion == null || direccion.isBlank()) {
+            throw new IllegalArgumentException("La dirección es obligatoria");
+        }
+        this.direccion = direccion.trim();
+    }
  
     public String getBarrio() { return barrio; }
-    public void setBarrio(String barrio) { this.barrio = barrio; }
+    public void setBarrio(String barrio) {
+        if (barrio == null || barrio.isBlank()) {
+            throw new IllegalArgumentException("El barrio es obligatorio");
+        }
+        this.barrio = barrio.trim();
+    }
  
     public double getLatitud() { return latitud; }
     public void setLatitud(double latitud) { this.latitud = latitud; }
@@ -52,5 +62,10 @@ public abstract class DañoEstructural implements EvaluableRiesgo {
  
     public String getDescripcion() { return descripcion; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+ 
+    @Override
+    public String toString() {
+        return getTipoDaño() + " en " + direccion + " (" + barrio + ") - riesgo " + calcularNivelRiesgo();
+    }
 }
 
