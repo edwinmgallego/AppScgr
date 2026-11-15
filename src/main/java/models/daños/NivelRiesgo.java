@@ -13,8 +13,19 @@ public enum NivelRiesgo {
  
     // sube un nivel (no pasa de CRITICO)
     public NivelRiesgo subir() {
-        int posicion = Math.min(ordinal() + 1, CRITICO.ordinal());
+        return subir(1);
+    }
+ 
+    // sobrecarga: sube varios niveles
+    public NivelRiesgo subir(int niveles) {
+        int posicion = Math.min(ordinal() + niveles, CRITICO.ordinal());
         return values()[posicion];
     }
+ 
+    // mira si es igual o mayor que otro
+    public boolean esAlMenos(NivelRiesgo otro) {
+        return ordinal() >= otro.ordinal();
+    }
 }
+
 
