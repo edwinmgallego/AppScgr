@@ -14,4 +14,9 @@ public enum EstadoPunto {
     CERRADO("Cerrado");
     
     private final String etiqueta;
+
+    private EstadoPunto(String etiqueta) {
+        this.etiqueta = etiqueta;
+    }
+    
 }
