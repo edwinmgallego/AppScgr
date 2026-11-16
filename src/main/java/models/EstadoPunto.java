@@ -10,4 +10,8 @@ package models;
  */
 public enum EstadoPunto {
     
+    ABIERTO("Abierto"),
+    CERRADO("Cerrado");
+    
+    private final String etiqueta;
 }
