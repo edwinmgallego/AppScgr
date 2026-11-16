@@ -18,5 +18,15 @@ public enum EstadoPunto {
     private EstadoPunto(String etiqueta) {
         this.etiqueta = etiqueta;
     }
+
+    public String getEtiqueta() {
+        return etiqueta;
+    }
     
+    public static EstadoPunto desdeTexto(String texto) {
+        if (texto == null || texto.isBlank()) {
+            return ABIERTO;
+        }
+        return valueOf(texto.trim().toUpperCase(java.util.Locale.ROOT));
+    }
 }
