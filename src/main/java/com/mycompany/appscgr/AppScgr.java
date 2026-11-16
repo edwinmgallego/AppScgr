@@ -4,9 +4,9 @@
 
 package com.mycompany.appscgr;
 
-import controllers.MapaController;
+import controllers.LoginController;
 import javax.swing.SwingUtilities;
-import views.MapaView;
+import views.LoginView;
 
 /**
  *
@@ -15,10 +15,7 @@ import views.MapaView;
 public class AppScgr {
 
     public static void main(String[] args) {
-     SwingUtilities.invokeLater(() -> {
-            MapaView vista = new MapaView();
-            MapaController controlador = new MapaController(vista);
-            controlador.iniciar();
-        });
+        // La aplicación arranca en el login; si es correcto, LoginController abre el mapa
+        SwingUtilities.invokeLater(() -> new LoginController(new LoginView()).iniciar());
     }
 }
