@@ -124,5 +124,10 @@ public class ServiciosPunto {
         }
         return limpio;
     }
+    
+    @Override
+    public String toString(){
+        return aTexto();
+    }
 }
 
