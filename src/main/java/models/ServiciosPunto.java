@@ -67,5 +67,36 @@ public class ServiciosPunto {
         }
         return resultado;
     }
+    
+    public String aTexto() {
+        String texto = String.join(SEPARADOR, servicios);
+        if (voluntariosNecesarios > 0) {
+            texto += MARCA_VOLUNTARIOS + voluntariosNecesarios;
+        }
+        return texto;
+    }
+    
+    public final boolean agregar(String servicio) {
+        return servicios.add(normalizar(servicio));
+    }
+    
+    public boolean quitar(String servicio) {
+        if (servicio == null || servicio.isBlank()) {
+            return false;
+        }
+        return servicios.remove(normalizar(servicio));
+    }
+    
+    public boolean contiene(String servicio) {
+        if (servicio == null || servicio.isBlank()) {
+            return false;
+        }
+        return servicios.contains(normalizar(servicio));
+    }
+    
+    public List<String> getServicios() {
+        return Collections.unmodifiableList(new ArrayList<>(servicios));
+    }
 }
+
 
