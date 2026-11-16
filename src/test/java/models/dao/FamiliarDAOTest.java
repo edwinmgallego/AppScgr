@@ -58,6 +58,43 @@ public class FamiliarDAOTest {
     }
 
     @Test
+    public void testQuienesMeTienen() {
+        assertTrue(familiarDAO.obtenerQuienesMeTienen(pariente.getId()).isEmpty());
+
+        familiarDAO.vincularFamiliar(titular.getId(), pariente);
+        List<Usuario> meTienen = familiarDAO.obtenerQuienesMeTienen(pariente.getId());
+        assertEquals(1, meTienen.size(), "El pariente debe ver que el titular lo agregó.");
+        assertEquals(titular.getId(), meTienen.get(0).getId());
+        assertEquals("Titular JUnit", meTienen.get(0).getNombreCompleto());
+
+        assertTrue(familiarDAO.obtenerQuienesMeTienen(titular.getId()).isEmpty(),
+                "El vínculo es de un solo sentido: el titular no aparece como agregado por el pariente.");
+    }
+
+    @Test
+    public void testAceptarFamiliarLoAgregaAMisFamiliares() {
+        familiarDAO.vincularFamiliar(titular.getId(), pariente);
+        assertFalse(familiarDAO.estaVinculado(pariente.getId(), titular.getId()), "Antes de aceptar no está en sus familiares.");
+        assertTrue(familiarDAO.obtenerFamiliares(pariente.getId()).isEmpty());
+
+        // Aceptar = vincular de vuelta
+        assertTrue(familiarDAO.vincularFamiliar(pariente.getId(), titular));
+        List<Familiar> familiares = familiarDAO.obtenerFamiliares(pariente.getId());
+        assertEquals(1, familiares.size());
+        assertEquals(titular.getId(), familiares.get(0).getFamiliarUsuarioId());
+    }
+
+    @Test
+    public void testRechazarSolicitud() {
+        familiarDAO.vincularFamiliar(titular.getId(), pariente);
+        assertEquals(1, familiarDAO.obtenerQuienesMeTienen(pariente.getId()).size());
+
+        assertFalse(familiarDAO.rechazarSolicitud(pariente.getId(), titular.getId()), "No hay vínculo de pariente hacia titular.");
+        assertTrue(familiarDAO.rechazarSolicitud(titular.getId(), pariente.getId()));
+        assertTrue(familiarDAO.obtenerQuienesMeTienen(pariente.getId()).isEmpty());
+    }
+
+    @Test
     public void testActualizarEstadoYDesvincular() {
         familiarDAO.vincularFamiliar(titular.getId(), pariente);
         int idVinculo = familiarDAO.obtenerFamiliares(titular.getId()).get(0).getId();

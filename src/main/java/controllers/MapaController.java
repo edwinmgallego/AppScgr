@@ -18,9 +18,10 @@ import models.dao.IncidenteDAO;
 import views.FamiliaresView;
 import views.LoginView;
 import views.MapaView;
+import views.PerfilView;
+
 import views.MarcadorRenderer;
 import views.MarcadorWaypoint;
-
 import org.jxmapviewer.viewer.GeoPosition;
 import org.jxmapviewer.viewer.WaypointPainter;
 
@@ -103,6 +104,9 @@ public class MapaController {
 
         // EVENTO 4: Abrir la red familiar (Equipo 1)
         vista.getItemRedFamiliar().addActionListener(e -> new FamiliaresController(new FamiliaresView(vista)).iniciar());
+
+        // EVENTO 4.1: Abrir mi perfil (editar datos y cambiar contraseña)
+        vista.getItemPerfil().addActionListener(e -> new PerfilController(new PerfilView(vista)).iniciar());
 
                // EVENTO 5: Cerrar sesión y volver al login (Equipo 1), preguntando antes
         vista.getItemCerrarSesion().addActionListener(e -> {

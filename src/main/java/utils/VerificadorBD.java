@@ -8,7 +8,7 @@ import java.net.Socket;
  * Revisa si el servidor MySQL de XAMPP está encendido, intentando abrir
  * una conexión de red a su puerto (no usa usuario ni contraseña).
  *
- * @author (escribe aquí tu nombre)
+ * @author 
  */
 public final class VerificadorBD {
 

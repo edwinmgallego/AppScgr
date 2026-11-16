@@ -32,6 +32,7 @@ public class MapaView extends JFrame {
     private JButton btnGuardar;
     private JButton btnLimpiar;
     private JMenuItem itemRedFamiliar;
+    private JMenuItem itemPerfil;
     private JMenuItem itemCerrarSesion;
 
     public MapaView() {
@@ -100,8 +101,10 @@ public class MapaView extends JFrame {
         JMenuBar barraMenu = new JMenuBar();
         JMenu menuCuenta = new JMenu("Cuenta");
         itemRedFamiliar = new JMenuItem("Mi red familiar");
+        itemPerfil = new JMenuItem("Mi perfil");
         itemCerrarSesion = new JMenuItem("Cerrar sesión");
         menuCuenta.add(itemRedFamiliar);
+        menuCuenta.add(itemPerfil);
         menuCuenta.addSeparator();
         menuCuenta.add(itemCerrarSesion);
         barraMenu.add(menuCuenta);
@@ -122,5 +125,6 @@ public class MapaView extends JFrame {
     public JButton getBtnGuardar() { return btnGuardar; }
     public JButton getBtnLimpiar() { return btnLimpiar; }
     public JMenuItem getItemRedFamiliar() { return itemRedFamiliar; }
+    public JMenuItem getItemPerfil() { return itemPerfil; }
     public JMenuItem getItemCerrarSesion() { return itemCerrarSesion; }
 }
