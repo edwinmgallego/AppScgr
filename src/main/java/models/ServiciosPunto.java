@@ -97,6 +97,32 @@ public class ServiciosPunto {
     public List<String> getServicios() {
         return Collections.unmodifiableList(new ArrayList<>(servicios));
     }
-}
 
+    public int getVoluntariosNecesarios() {
+        return voluntariosNecesarios;
+    }
+    
+    public final void setVoluntariosNecesarios(int voluntariosNecesarios) {
+        if (voluntariosNecesarios < 0) {
+            throw new IllegalArgumentException("Los voluntarios necesarios no pueden ser negativos.");
+        }
+        this.voluntariosNecesarios = voluntariosNecesarios;
+    }
+    
+    public boolean cabeEnColumna() {
+        return aTexto().length() <= LIMITE_TEXTO;
+    }
+    
+    private static String normalizar(String servicio) {
+        if (servicio == null || servicio.isBlank()) {
+            throw new IllegalArgumentException("El servicio no puede estar vacío.");
+}
+                   
+        String limpio = servicio.trim().toUpperCase(Locale.ROOT).replaceAll("\\s+", "_");
+        if (limpio.contains(SEPARADOR) || limpio.contains(";") || limpio.contains("=")) {
+            throw new IllegalArgumentException("El servicio no puede contener ',', ';' ni '='.");
+        }
+        return limpio;
+    }
+}
 
