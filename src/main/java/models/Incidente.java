@@ -11,7 +11,7 @@ package models;
 
 
 
-public class Incidente {
+public class Incidente implements Geolocalizable {
     private int id;
     private String tipo;
     private double latitud;
