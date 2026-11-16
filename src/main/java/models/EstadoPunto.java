@@ -29,4 +29,10 @@ public enum EstadoPunto {
         }
         return valueOf(texto.trim().toUpperCase(java.util.Locale.ROOT));
     }
+    
+    @Override
+    public String toString(){
+        
+        return etiqueta;
+    }
 }
