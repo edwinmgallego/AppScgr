@@ -10,11 +10,8 @@ package controllers;
  */
 
 
-import config.Sesion;
 import models.Incidente;
 import models.dao.IncidenteDAO;
-import views.FamiliaresView;
-import views.LoginView;
 import views.MapaView;
 
 import org.jxmapviewer.viewer.DefaultWaypoint;
@@ -74,8 +71,8 @@ public class MapaController {
                 // Crear objeto Modelo
                 Incidente nuevoIncidente = new Incidente(0, tipo, lat, lon, descripcion);
 
-                // Enviar al DAO con el id del usuario que inició sesión
-                if (incidenteDAO.registrarIncidente(nuevoIncidente, Sesion.getUsuarioActual().getId())) {
+                // Enviar al DAO (El '1' es el idUsuarioLogueado de prueba que creamos)
+                if (incidenteDAO.registrarIncidente(nuevoIncidente, 1)) {
                     JOptionPane.showMessageDialog(vista, "Incidente registrado exitosamente.");
                     limpiarFormulario();
                     cargarIncidentesEnMapa(); // Refrescar los pines
@@ -87,16 +84,6 @@ public class MapaController {
 
         // EVENTO 3: Limpiar formulario
         vista.getBtnLimpiar().addActionListener(e -> limpiarFormulario());
-
-        // EVENTO 4: Abrir la red familiar (Equipo 1)
-        vista.getItemRedFamiliar().addActionListener(e -> new FamiliaresController(new FamiliaresView(vista)).iniciar());
-
-        // EVENTO 5: Cerrar sesión y volver al login (Equipo 1)
-        vista.getItemCerrarSesion().addActionListener(e -> {
-            Sesion.cerrar();
-            vista.dispose();
-            new LoginController(new LoginView()).iniciar();
-        });
     }
 
     // Método READ: Pinta los puntos de la BD en el mapa
@@ -122,9 +109,6 @@ public class MapaController {
     }
 
     public void iniciar() {
-        if (Sesion.hayUsuario()) {
-            vista.setTitle(vista.getTitle() + " - " + Sesion.getUsuarioActual().getNombreCompleto());
-        }
         vista.setVisible(true);
     }
 }
