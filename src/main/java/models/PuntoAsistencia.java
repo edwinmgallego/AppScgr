@@ -9,6 +9,24 @@ import java.util.Locale;
  *
  * @author Titoelgato
  */
-public class PuntoAsistencia {
+public abstract class PuntoAsistencia implements Geolocalizable {
 
+    /** Tamaño de la columna nombre en la base de datos. */
+    public static final int MAX_NOMBRE = 100;
+
+    private int id;
+    private String nombre;
+    private double latitud;
+    private double longitud;
+    private EstadoPunto estado;
+    private ServiciosPunto servicios;
+
+    public PuntoAsistencia(int id, String nombre, double latitud, double longitud, EstadoPunto estado, ServiciosPunto servicios) {
+        this.id = id;
+        this.nombre = nombre;
+        this.latitud = latitud;
+        this.longitud = longitud;
+        this.estado = estado;
+        this.servicios = servicios;
+    }
 }
