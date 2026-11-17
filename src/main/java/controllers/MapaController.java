@@ -116,6 +116,9 @@ public class MapaController {
         // EVENTO 3: Limpiar formulario
         vista.getBtnLimpiar().addActionListener(e -> limpiarFormulario());
 
+        // EVENTO 3.1: Actualizar el reporte seleccionado (UPDATE) - Equipo 3
+        vista.getBtnActualizar().addActionListener(e -> actualizarReporte());
+
         // EVENTO 4: Abrir la red familiar (Equipo 1)
         vista.getItemRedFamiliar().addActionListener(e -> new FamiliaresController(new FamiliaresView(vista)).iniciar());
 
@@ -183,6 +186,35 @@ public class MapaController {
     /** Punto de enganche para otros módulos que necesiten las coordenadas del clic. */
     public void addSeleccionListener(SeleccionListener oyente) {
         oyentesSeleccion.add(Objects.requireNonNull(oyente, "El oyente es obligatorio."));
+    }
+
+    /** Guarda en la base de datos los cambios del reporte seleccionado. */
+    private void actualizarReporte() {
+        if (incidenteSeleccionado == null) {
+            return; // No hay ningún reporte seleccionado
+        }
+        String tipo = (String) vista.getCbxTipoIncidente().getSelectedItem();
+        String error = validarFormulario(vista.getTxtLatitud().getText(), tipo, vista.getTxtDescripcion().getText());
+        if (error != null) {
+            JOptionPane.showMessageDialog(vista, error, "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Se crea un objeto con el mismo id y los datos nuevos del formulario
+        Incidente cambios = new Incidente(
+                incidenteSeleccionado.getId(),
+                tipo,
+                Double.parseDouble(vista.getTxtLatitud().getText()),
+                Double.parseDouble(vista.getTxtLongitud().getText()),
+                vista.getTxtDescripcion().getText().trim());
+
+        if (incidenteDAO.actualizarIncidente(cambios)) {
+            JOptionPane.showMessageDialog(vista, "Reporte actualizado exitosamente.");
+            limpiarFormulario();
+            cargarIncidentesEnMapa(); // Refrescar los marcadores
+        } else {
+            JOptionPane.showMessageDialog(vista, "Error al actualizar en la base de datos.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
     /** Busca el reporte cuyo marcador está más cerca del clic, o null si no hay ninguno cerca. */
     private Incidente buscarIncidenteCerca(Point clic) {
