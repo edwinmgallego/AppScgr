@@ -22,7 +22,7 @@ public class Supermercado extends PuntoAsistencia {
 
     @Override
     public String getTipoPunto() { 
-        return "Supermercado"; }
+        return "SUPERMERCADO"; }
 
     @Override
     public String getEtiquetaTipo() { 
