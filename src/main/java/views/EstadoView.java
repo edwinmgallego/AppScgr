@@ -50,7 +50,3 @@ public class EstadoView extends JFrame {
     public JButton getBtnNecesitoAyuda() { return btnNecesitoAyuda; }
 }
         
-        
-
-    }
-}
