@@ -21,13 +21,15 @@ public class Supermercado extends PuntoAsistencia {
     }
 
     @Override
-    public String getTipoPunto() { return "ALBERGUE"; }
+    public String getTipoPunto() { 
+        return "Supermercado"; }
 
     @Override
-    public String getEtiquetaTipo() { return "Albergue"; }
+    public String getEtiquetaTipo() { 
+        return "Supermercado"; }
 
     @Override
     public List<String> getServiciosSugeridos() {
-        return List.of("AGUA", "ALIMENTACION", "INTERNET", "ENERGIA");
+        return List.of("AGUA", "ALIMENTACION");
     }
 }
