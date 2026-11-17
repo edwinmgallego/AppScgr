@@ -31,6 +31,8 @@ public class MapaView extends JFrame {
     private JTextField txtLongitud;
     private JButton btnGuardar;
     private JButton btnLimpiar;
+    private JButton btnActualizar;
+    private JButton btnEliminar;
     private JMenuItem itemRedFamiliar;
     private JMenuItem itemPerfil;
     private JMenuItem itemCerrarSesion;
@@ -90,11 +92,18 @@ public class MapaView extends JFrame {
         gbc.gridy = 7; panelCrud.add(new JScrollPane(txtDescripcion), gbc);
 
         // Botones
-        JPanel panelBotones = new JPanel(new GridLayout(1, 2, 5, 5));
+        JPanel panelBotones = new JPanel(new GridLayout(2, 2, 5, 5));
         btnGuardar = new JButton("Guardar");
         btnLimpiar = new JButton("Limpiar");
+        btnActualizar = new JButton("Actualizar");
+        btnEliminar = new JButton("Eliminar");
+        // Apagados hasta que el usuario seleccione un reporte del mapa
+        btnActualizar.setEnabled(false);
+        btnEliminar.setEnabled(false);
         panelBotones.add(btnGuardar);
         panelBotones.add(btnLimpiar);
+        panelBotones.add(btnActualizar);
+        panelBotones.add(btnEliminar);
         gbc.gridy = 8; panelCrud.add(panelBotones, gbc);
 
         // --- MENÚ DE CUENTA (Equipo 1: Autenticación y Red Familiar) ---
@@ -124,6 +133,8 @@ public class MapaView extends JFrame {
     public JTextField getTxtLongitud() { return txtLongitud; }
     public JButton getBtnGuardar() { return btnGuardar; }
     public JButton getBtnLimpiar() { return btnLimpiar; }
+    public JButton getBtnActualizar() { return btnActualizar; }
+    public JButton getBtnEliminar() { return btnEliminar; }
     public JMenuItem getItemRedFamiliar() { return itemRedFamiliar; }
     public JMenuItem getItemPerfil() { return itemPerfil; }
     public JMenuItem getItemCerrarSesion() { return itemCerrarSesion; }
