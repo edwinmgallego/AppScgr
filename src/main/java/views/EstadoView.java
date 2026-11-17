@@ -92,6 +92,25 @@ public class EstadoView extends JFrame {
         add(lblMensaje, BorderLayout.SOUTH);
     }
     
+    public void setConectado(boolean conectado) {
+        if (conectado) {
+            lblConexion.setText("Estado: CON CONEXIÓN");
+            lblConexion.setForeground(new Color(46, 160, 67));
+        } else {
+            lblConexion.setText("Estado: SIN CONEXIÓN (los mensajes se guardan en la cola)");
+            lblConexion.setForeground(new Color(200, 40, 40));
+        }
+    }
+
+    public void setPendientes(int cantidad) {
+        lblPendientes.setText("Mensajes pendientes en cola: " + cantidad);
+        btnSincronizar.setEnabled(cantidad > 0);
+    }
+
+    public void setMensaje(String texto) {
+        lblMensaje.setText(texto);
+    }
+    
     public JButton getBtnEstoyBien() { return btnEstoyBien; }
     public JButton getBtnNecesitoAyuda() { return btnNecesitoAyuda; }
     public JButton getBtnSincronizar() { return btnSincronizar; }
