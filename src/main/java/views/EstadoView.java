@@ -4,6 +4,7 @@
  */
 package views;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
 /**
@@ -18,6 +19,8 @@ public class EstadoView extends JFrame {
     private JCheckBox chkSinConexion;
     private JLabel lblConexion;
     private JLabel lblPendientes;
+    private JLabel lblMensaje;
+    private DefaultTableModel modeloTabla;
 
     public EstadoView() {
         setTitle("Alertas y Estado de Supervivencia");
@@ -66,8 +69,27 @@ public class EstadoView extends JFrame {
         JPanel panelNorte = new JPanel(new BorderLayout(0, 10));
         panelNorte.add(panelEstados, BorderLayout.CENTER);
         panelNorte.add(panelConexion, BorderLayout.SOUTH);
+        
+        modeloTabla = new DefaultTableModel(new String[]{"Fecha de emisión", "Estado", "Envío"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        JTable tabla = new JTable(modeloTabla);
+        JScrollPane scroll = new JScrollPane(tabla);
+        scroll.setBorder(BorderFactory.createTitledBorder("Mensajes de esta sesión"));
+        
+        lblMensaje = new JLabel(" ");
+        lblMensaje.setBorder(BorderFactory.createEmptyBorder(0, 10, 8, 10));
 
-        add(panelNorte, BorderLayout.NORTH);
+        JPanel contenido = new JPanel(new BorderLayout(10, 10));
+        contenido.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
+        contenido.add(panelNorte, BorderLayout.NORTH);
+        contenido.add(scroll, BorderLayout.CENTER);
+
+        add(contenido, BorderLayout.CENTER);
+        add(lblMensaje, BorderLayout.SOUTH);
     }
     
     public JButton getBtnEstoyBien() { return btnEstoyBien; }
