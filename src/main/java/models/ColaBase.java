@@ -23,24 +23,21 @@ public abstract class ColaBase<T extends Mensaje> {
         pendientes.add(mensaje);
     }
 
-    
     protected abstract void alEnviar(T mensaje);
 
-    
     public synchronized int sincronizar(Predicate<T> envio) {
         return sincronizar(envio, Integer.MAX_VALUE);
     }
 
-    
     public synchronized int sincronizar(Predicate<T> envio, int maximo) {
         int enviados = 0;
         while (enviados < maximo && !pendientes.isEmpty()) {
-            T siguiente = pendientes.get(0);       
+            T siguiente = pendientes.get(0);   
             if (!envio.test(siguiente)) {
                 break; 
             }
             alEnviar(siguiente);
-            pendientes.remove(0);                  
+            pendientes.remove(0);              
             enviados++;
         }
         return enviados;
@@ -54,7 +51,6 @@ public abstract class ColaBase<T extends Mensaje> {
         return pendientes.isEmpty();
     }
 
-    
     public synchronized List<T> verPendientes() {
         return new ArrayList<>(pendientes);
     }

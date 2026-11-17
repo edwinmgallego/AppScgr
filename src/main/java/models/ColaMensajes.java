@@ -9,6 +9,12 @@ package models;
  * @author USER
  */
 public class ColaMensajes extends ColaBase<MensajeEstado> {
+
+    @Override
+    protected void alEnviar(MensajeEstado mensaje) {
+        mensaje.setEnviado(true);
+    }
+    
     @Override
     public String toString() {
         return "ColaMensajes{pendientes=" + cantidadPendientes() + "}";
