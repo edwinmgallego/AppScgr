@@ -119,6 +119,9 @@ public class MapaController {
         // EVENTO 3.1: Actualizar el reporte seleccionado (UPDATE) - Equipo 3
         vista.getBtnActualizar().addActionListener(e -> actualizarReporte());
 
+        // EVENTO 3.2: Eliminar el reporte seleccionado (DELETE) - Equipo 3
+        vista.getBtnEliminar().addActionListener(e -> eliminarReporte());
+
         // EVENTO 4: Abrir la red familiar (Equipo 1)
         vista.getItemRedFamiliar().addActionListener(e -> new FamiliaresController(new FamiliaresView(vista)).iniciar());
 
@@ -186,6 +189,27 @@ public class MapaController {
     /** Punto de enganche para otros módulos que necesiten las coordenadas del clic. */
     public void addSeleccionListener(SeleccionListener oyente) {
         oyentesSeleccion.add(Objects.requireNonNull(oyente, "El oyente es obligatorio."));
+    }
+
+    /** Borra el reporte seleccionado, preguntando antes para evitar errores. */
+    private void eliminarReporte() {
+        if (incidenteSeleccionado == null) {
+            return; // No hay ningún reporte seleccionado
+        }
+        int respuesta = JOptionPane.showConfirmDialog(vista,
+                "¿Seguro que desea eliminar este reporte? Esta acción no se puede deshacer.",
+                "Eliminar reporte", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (respuesta != JOptionPane.YES_OPTION) {
+            return; // Dijo que no: no se borra nada
+        }
+
+        if (incidenteDAO.eliminarIncidente(incidenteSeleccionado.getId())) {
+            JOptionPane.showMessageDialog(vista, "Reporte eliminado.");
+            limpiarFormulario();
+            cargarIncidentesEnMapa(); // El marcador desaparece del mapa
+        } else {
+            JOptionPane.showMessageDialog(vista, "Error al eliminar en la base de datos.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /** Guarda en la base de datos los cambios del reporte seleccionado. */
