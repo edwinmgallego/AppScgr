@@ -58,6 +58,13 @@ public class UsuarioDAOTest {
     }
 
     @Test
+    public void testActualizarPassword() {
+        assertTrue(usuarioDAO.actualizarPassword(usuarioPrueba.getId(), "Nueva456@"));
+        assertNull(usuarioDAO.autenticar(usuarioPrueba.getDocumento(), "secreta123"), "La contraseña vieja ya no debe servir.");
+        assertNotNull(usuarioDAO.autenticar(usuarioPrueba.getDocumento(), "Nueva456@"), "La nueva contraseña debe permitir iniciar sesión.");
+    }
+
+    @Test
     public void testBuscarPorNombreExcluyeAlMismoUsuario() {
         List<Usuario> encontrados = usuarioDAO.buscarUsuarios("Prueba JUnit Usuario", 0);
         assertTrue(contieneUsuario(encontrados, usuarioPrueba.getId()));
