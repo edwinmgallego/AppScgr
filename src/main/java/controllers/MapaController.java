@@ -73,14 +73,18 @@ public class MapaController {
         vista.getBtnGuardar().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (vista.getTxtLatitud().getText().isEmpty()) {
-                    JOptionPane.showMessageDialog(vista, "Haga clic en el mapa para seleccionar la ubicación.", "Aviso", JOptionPane.WARNING_MESSAGE);
-                    return;
+                String error = validarFormulario(
+                        vista.getTxtLatitud().getText(),
+                        (String) vista.getCbxTipoIncidente().getSelectedItem(),
+                        vista.getTxtDescripcion().getText());
+                if (error != null) {
+                    JOptionPane.showMessageDialog(vista, error, "Aviso", JOptionPane.WARNING_MESSAGE);
+                    return; // Si hay error, no se guarda nada
                 }
 
                 // Recolectar datos del formulario
                 String tipo = vista.getCbxTipoIncidente().getSelectedItem().toString();
-                String descripcion = vista.getTxtDescripcion().getText();
+                String descripcion = vista.getTxtDescripcion().getText().trim();
                 double lat = Double.parseDouble(vista.getTxtLatitud().getText());
                 double lon = Double.parseDouble(vista.getTxtLongitud().getText());
 
@@ -163,6 +167,20 @@ public class MapaController {
     /** Punto de enganche para otros módulos que necesiten las coordenadas del clic. */
     public void addSeleccionListener(SeleccionListener oyente) {
         oyentesSeleccion.add(Objects.requireNonNull(oyente, "El oyente es obligatorio."));
+    }
+
+    /** Devuelve el mensaje de error, o null si el formulario está bien. */
+    static String validarFormulario(String latitud, String tipo, String descripcion) {
+        if (latitud == null || latitud.isBlank()) {
+            return "Haga clic en el mapa para seleccionar la ubicación.";
+        }
+        if (tipo == null || tipo.isBlank()) {
+            return "Seleccione el tipo de incidente.";
+        }
+        if (descripcion == null || descripcion.isBlank()) {
+            return "Escriba una descripción del incidente.";
+        }
+        return null;
     }
 
     private void limpiarFormulario() {
