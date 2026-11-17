@@ -12,8 +12,12 @@ import java.awt.*;
  */
 public class EstadoView extends JFrame {
     
-    private JButton btnEstoyBien;
+      private JButton btnEstoyBien;
     private JButton btnNecesitoAyuda;
+    private JButton btnSincronizar;
+    private JCheckBox chkSinConexion;
+    private JLabel lblConexion;
+    private JLabel lblPendientes;
 
     public EstadoView() {
         setTitle("Alertas y Estado de Supervivencia");
@@ -43,10 +47,32 @@ public class EstadoView extends JFrame {
             panelEstados.add(boton);
         }
 
-        add(panelEstados, BorderLayout.NORTH);
+        JPanel panelConexion = new JPanel(new GridLayout(3, 1, 0, 4));
+        panelConexion.setBorder(BorderFactory.createTitledBorder("Conexión"));
+
+        chkSinConexion = new JCheckBox("Simular que no hay conexión");
+        lblConexion = new JLabel();
+        lblPendientes = new JLabel();
+
+        JPanel filaPendientes = new JPanel(new BorderLayout(10, 0));
+        btnSincronizar = new JButton("Sincronizar ahora");
+        filaPendientes.add(lblPendientes, BorderLayout.CENTER);
+        filaPendientes.add(btnSincronizar, BorderLayout.EAST);
+
+        panelConexion.add(chkSinConexion);
+        panelConexion.add(lblConexion);
+        panelConexion.add(filaPendientes);
+
+        JPanel panelNorte = new JPanel(new BorderLayout(0, 10));
+        panelNorte.add(panelEstados, BorderLayout.CENTER);
+        panelNorte.add(panelConexion, BorderLayout.SOUTH);
+
+        add(panelNorte, BorderLayout.NORTH);
     }
     
     public JButton getBtnEstoyBien() { return btnEstoyBien; }
     public JButton getBtnNecesitoAyuda() { return btnNecesitoAyuda; }
+    public JButton getBtnSincronizar() { return btnSincronizar; }
+    public JCheckBox getChkSinConexion() { return chkSinConexion; }
 }
         
