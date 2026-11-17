@@ -22,8 +22,9 @@ public class MensajeEstado extends Mensaje {
         super(id, usuarioId, fechaCreacion, enviado);
         this.estado = estado;
     }
+    public EstadoSupervivencia getEstado() { return estado; }
+    public void setEstado(EstadoSupervivencia estado) { this.estado = estado; }
 
-    
     @Override
     public String getResumen() {
         return estado == null ? "sin estado" : estado.getEtiqueta();
