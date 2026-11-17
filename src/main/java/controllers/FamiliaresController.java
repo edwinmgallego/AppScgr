@@ -36,7 +36,10 @@ public class FamiliaresController {
         vista.getBtnCambiarEstado().addActionListener(e -> cambiarEstado());
         vista.getBtnDesvincular().addActionListener(e -> desvincular());
         vista.getBtnPrincipal().addActionListener(e -> cambiarPrincipal());
+        vista.getBtnAceptar().addActionListener(e -> aceptarFamiliar());
+        vista.getBtnRechazar().addActionListener(e -> rechazarFamiliar());
         cargarFamiliares();
+        cargarQuienesMeTienen();
     }
 
     private void buscar() {
@@ -83,6 +86,7 @@ public class FamiliaresController {
         if (familiarDAO.vincularFamiliar(usuarioActual.getId(), familiar)) {
             JOptionPane.showMessageDialog(vista, familiar.getNombreCompleto() + " fue agregado a su red familiar.");
             cargarFamiliares();
+            cargarQuienesMeTienen(); // si esa persona ya lo había agregado, pasa a "Aceptado"
         } else {
             // Se le explica al usuario el motivo exacto que dejó el DAO
             JOptionPane.showMessageDialog(vista, "No se pudo vincular el familiar.\nMotivo: " + familiarDAO.getUltimoError(),
@@ -150,6 +154,7 @@ public class FamiliaresController {
         int respuesta = JOptionPane.showConfirmDialog(vista, "¿Quitar a este familiar de su red?", "Confirmar", JOptionPane.YES_NO_OPTION);
         if (respuesta == JOptionPane.YES_OPTION && familiarDAO.desvincularFamiliar(idVinculo, usuarioActual.getId())) {
             cargarFamiliares();
+            cargarQuienesMeTienen(); // si esa persona lo tenía agregado, vuelve a "Pendiente"
         }
     }
 
@@ -185,6 +190,66 @@ public class FamiliaresController {
         int idPrincipal = familiarDAO.obtenerIdPrincipal(usuarioActual.getId());
         for (Familiar f : familiarDAO.obtenerFamiliares(usuarioActual.getId())) {
             modelo.addRow(new Object[]{f.getId(), f.getDocumento(), (f.getId() == idPrincipal ? "★ " : "") + f.getNombreFamiliar(), f.getTelefono(), f.getEstadoEmergencia()});
+        }
+    }
+
+    // Llena la pestaña "Me tienen como familiar" con los usuarios que agregaron al usuario actual.
+    // "Aceptado" = ya está también en Mis familiares; "Pendiente" = todavía no lo acepté.
+    private void cargarQuienesMeTienen() {
+        DefaultTableModel modelo = vista.getModeloMeTienen();
+        modelo.setRowCount(0);
+        for (Usuario u : familiarDAO.obtenerQuienesMeTienen(usuarioActual.getId())) {
+            String estado = familiarDAO.estaVinculado(usuarioActual.getId(), u.getId()) ? "Aceptado" : "Pendiente";
+            modelo.addRow(new Object[]{u.getId(), u.getDocumento(), u.getNombreCompleto(), u.getTelefono(), estado});
+        }
+    }
+
+    // Acepta a quien me agregó: lo vincula de vuelta para que aparezca en "Mis familiares"
+    private void aceptarFamiliar() {
+        Integer idUsuario = idSeleccionado(vista.getTblMeTienen(), vista.getModeloMeTienen());
+        if (idUsuario == null) {
+            JOptionPane.showMessageDialog(vista, "Seleccione una persona de la lista.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (familiarDAO.estaVinculado(usuarioActual.getId(), idUsuario)) {
+            JOptionPane.showMessageDialog(vista, "Esa persona ya está en Mis familiares.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        if (!confirmarIdentidad()) {
+            return;
+        }
+        Usuario solicitante = usuarioDAO.obtenerPorId(idUsuario);
+        if (familiarDAO.vincularFamiliar(usuarioActual.getId(), solicitante)) {
+            JOptionPane.showMessageDialog(vista, solicitante.getNombreCompleto() + " fue aceptado y ya aparece en Mis familiares.");
+            cargarFamiliares();
+            cargarQuienesMeTienen();
+        } else {
+            JOptionPane.showMessageDialog(vista, "No se pudo aceptar al familiar.\nMotivo: " + familiarDAO.getUltimoError(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Rechaza a quien me agregó: se borra su vínculo hacia mí y deja de aparecer en esta lista
+    private void rechazarFamiliar() {
+        Integer idUsuario = idSeleccionado(vista.getTblMeTienen(), vista.getModeloMeTienen());
+        if (idUsuario == null) {
+            JOptionPane.showMessageDialog(vista, "Seleccione una persona de la lista.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (familiarDAO.estaVinculado(usuarioActual.getId(), idUsuario)) {
+            JOptionPane.showMessageDialog(vista, "Ya aceptó a esa persona.\nSi quiere quitarla, use \"Desvincular\" en Mis familiares.",
+                    "Aviso", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        int respuesta = JOptionPane.showConfirmDialog(vista,
+                "¿Rechazar a esta persona?\nDejará de tenerlo en su red familiar.", "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (respuesta != JOptionPane.YES_OPTION) {
+            return;
+        }
+        if (familiarDAO.rechazarSolicitud(idUsuario, usuarioActual.getId())) {
+            cargarQuienesMeTienen();
+        } else {
+            JOptionPane.showMessageDialog(vista, "No se pudo rechazar la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 

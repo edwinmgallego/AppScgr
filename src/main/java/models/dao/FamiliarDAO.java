@@ -132,6 +132,41 @@ public class FamiliarDAO {
         return lista;
     }
 
+    // READ: usuarios que tienen a este usuario en SU red familiar (el vínculo al revés).
+    // Ej.: si Ana vinculó a Luis, al buscar los de Luis aparece Ana.
+    public List<Usuario> obtenerQuienesMeTienen(int usuarioId) {
+        List<Usuario> lista = new ArrayList<>();
+        String sql = "SELECT u.id, u.documento, u.nombre_completo, u.telefono "
+                + "FROM familiares f JOIN usuarios u ON u.id = f.usuario_id "
+                + "WHERE f.familiar_usuario_id = ? ORDER BY u.nombre_completo";
+        try (PreparedStatement pstmt = conexion().prepareStatement(sql)) {
+            pstmt.setInt(1, usuarioId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(new Usuario(rs.getInt("id"), rs.getString("documento"),
+                            rs.getString("nombre_completo"), rs.getString("telefono")));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al obtener quiénes lo tienen como familiar: " + e.getMessage());
+        }
+        return lista;
+    }
+
+    // DELETE: rechaza a alguien que me agregó como familiar. Borra SU vínculo hacia mí
+    // (usuario_id = quien me agregó, familiar_usuario_id = yo), así que deja de aparecer en "Me tienen como familiar".
+    public boolean rechazarSolicitud(int idQuienMeAgrego, int usuarioId) {
+        String sql = "DELETE FROM familiares WHERE usuario_id = ? AND familiar_usuario_id = ?";
+        try (PreparedStatement pstmt = conexion().prepareStatement(sql)) {
+            pstmt.setInt(1, idQuienMeAgrego);
+            pstmt.setInt(2, usuarioId);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error DAO al rechazar la solicitud: " + e.getMessage());
+            return false;
+        }
+    }
+
     // UPDATE: cambia el estado de emergencia (SEGURO, NECESITA AYUDA, DESCONOCIDO)
     public boolean actualizarEstado(int idFamiliar, int usuarioId, String estado) {
         String sql = "UPDATE familiares SET estado_emergencia = ? WHERE id = ? AND usuario_id = ?";

@@ -7,7 +7,7 @@ import java.awt.*;
  * Ventana para que el usuario edite sus datos (nombre y teléfono).
  * El documento se muestra, pero no se puede cambiar porque es con lo que inicia sesión.
  *
- * @author (escribe aquí tu nombre)
+ * @author
  */
 public class PerfilView extends JDialog {
     private JTextField txtDocumento;
@@ -15,6 +15,12 @@ public class PerfilView extends JDialog {
     private JTextField txtTelefono;
     private JButton btnGuardar;
     private JButton btnCancelar;
+
+    private JPasswordField txtPasswordActual;
+    private JPasswordField txtPasswordNueva;
+    private JPasswordField txtPasswordConfirmar;
+    private JCheckBox chkMostrarPassword;
+    private JButton btnCambiarPassword;
 
     public PerfilView(Frame padre) {
         super(padre, "Editar mi perfil", true);
@@ -45,7 +51,38 @@ public class PerfilView extends JDialog {
         gbc.insets = new Insets(15, 5, 4, 5);
         panel.add(panelBotones, gbc);
 
-        add(panel);
+        // --- CAMBIAR CONTRASEÑA ---
+        JPanel panelPassword = new JPanel(new GridBagLayout());
+        panelPassword.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createEmptyBorder(0, 20, 15, 20),
+                BorderFactory.createTitledBorder("Cambiar contraseña")));
+        GridBagConstraints gbcPass = new GridBagConstraints();
+        gbcPass.fill = GridBagConstraints.HORIZONTAL;
+        gbcPass.insets = new Insets(4, 5, 4, 5);
+
+        txtPasswordActual = new JPasswordField(20);
+        txtPasswordNueva = new JPasswordField(20);
+        txtPasswordConfirmar = new JPasswordField(20);
+        agregarFila(panelPassword, gbcPass, 0, "Contraseña actual:", txtPasswordActual);
+        agregarFila(panelPassword, gbcPass, 1, "Nueva contraseña:", txtPasswordNueva);
+        agregarFila(panelPassword, gbcPass, 2, "Confirmar nueva:", txtPasswordConfirmar);
+
+        JLabel lblRequisitos = new JLabel("Mínimo 8 caracteres, con mayúscula, minúscula y un carácter especial.");
+        lblRequisitos.setFont(lblRequisitos.getFont().deriveFont(Font.PLAIN, 11f));
+        gbcPass.gridx = 0; gbcPass.gridy = 3; gbcPass.gridwidth = 2;
+        panelPassword.add(lblRequisitos, gbcPass);
+
+        chkMostrarPassword = new JCheckBox("Mostrar contraseñas");
+        gbcPass.gridx = 1; gbcPass.gridy = 4; gbcPass.gridwidth = 1;
+        panelPassword.add(chkMostrarPassword, gbcPass);
+
+        btnCambiarPassword = new JButton("Cambiar contraseña");
+        gbcPass.gridx = 0; gbcPass.gridy = 5; gbcPass.gridwidth = 2;
+        gbcPass.insets = new Insets(10, 5, 4, 5);
+        panelPassword.add(btnCambiarPassword, gbcPass);
+
+        add(panel, BorderLayout.NORTH);
+        add(panelPassword, BorderLayout.CENTER);
         getRootPane().setDefaultButton(btnGuardar);
         pack();
         setLocationRelativeTo(padre);
@@ -64,4 +101,9 @@ public class PerfilView extends JDialog {
     public JTextField getTxtTelefono() { return txtTelefono; }
     public JButton getBtnGuardar() { return btnGuardar; }
     public JButton getBtnCancelar() { return btnCancelar; }
+    public JPasswordField getTxtPasswordActual() { return txtPasswordActual; }
+    public JPasswordField getTxtPasswordNueva() { return txtPasswordNueva; }
+    public JPasswordField getTxtPasswordConfirmar() { return txtPasswordConfirmar; }
+    public JCheckBox getChkMostrarPassword() { return chkMostrarPassword; }
+    public JButton getBtnCambiarPassword() { return btnCambiarPassword; }
 }
