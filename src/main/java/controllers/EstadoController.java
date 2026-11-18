@@ -39,10 +39,35 @@ public class EstadoController extends BaseController<EstadoView> {
         inicializarEventos();
     }
     
+    @Override
+    protected void inicializarEventos() {
+        vista.getBtnEstoyBien().addActionListener(e -> emitirEstado(EstadoSupervivencia.ESTOY_BIEN));
+        vista.getBtnNecesitoAyuda().addActionListener(e -> emitirEstado(EstadoSupervivencia.NECESITO_AYUDA));
+
+        // Al marcar/desmarcar "sin conexión": si se recupera la conexión, se vacía la cola
+        vista.getChkSinConexion().addActionListener(e -> {
+            boolean conectado = hayConexion();
+            vista.setConectado(conectado);
+            if (conectado) {
+                sincronizar();
+            } else {
+                vista.setMensaje("Sin conexión: los próximos mensajes se guardarán en la cola.");
+            }
+        });
+
+        vista.getBtnSincronizar().addActionListener(e -> {
+            if (hayConexion()) {
+                sincronizar();
+            } else {
+                vista.setMensaje("No se puede sincronizar: no hay conexión.");
+            }
+        });
+    }
+    
     private boolean hayConexion() {
         return !vista.getChkSinConexion().isSelected();
     }
-    
+
     private void emitirEstado(EstadoSupervivencia estado) {
         Usuario usuario = Sesion.getUsuarioActual();
         if (usuario == null) {
