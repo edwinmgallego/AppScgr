@@ -29,7 +29,7 @@ public class MensajeEstadoDAOTest {
 
     @AfterEach
     public void tearDown() {
-        
+
         usuarioDAO.eliminarUsuario(usuarioPrueba.getId());
     }
 
@@ -57,5 +57,28 @@ public class MensajeEstadoDAOTest {
         assertTrue(m.tieneUbicacion());
         assertEquals(Double.valueOf(3.4516), m.getLatitud());
         assertTrue(m.isEnviado(), "Lo leído de la base de datos ya fue enviado.");
+    }
+
+    @Test
+    public void testRegistrarEstadoSeReflejaEnLaRedFamiliar() {
+        Usuario dueno = new Usuario(0, "T2D" + System.currentTimeMillis(), "Dueño Prueba", "3111111111");
+        assertTrue(usuarioDAO.registrarUsuario(dueno, "clave123"));
+        FamiliarDAO familiarDAO = new FamiliarDAO();
+        try {
+
+            assertTrue(familiarDAO.vincularFamiliar(dueno.getId(), usuarioPrueba), familiarDAO.getUltimoError());
+
+            assertTrue(dao.registrarEstado(mensaje(EstadoSupervivencia.NECESITO_AYUDA, null, null)));
+
+            List<Familiar> red = familiarDAO.obtenerFamiliares(dueno.getId());
+            assertEquals(1, red.size());
+            assertEquals("NECESITA AYUDA", red.get(0).getEstadoEmergencia());
+            
+        } finally {
+            for (Familiar f : familiarDAO.obtenerFamiliares(dueno.getId())) {
+                familiarDAO.desvincularFamiliar(f.getId(), dueno.getId());
+            }
+            usuarioDAO.eliminarUsuario(dueno.getId());
+        }
     }
 }
