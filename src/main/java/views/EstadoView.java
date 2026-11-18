@@ -6,12 +6,19 @@ package views;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import models.MensajeEstado;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+
 
 /**
  *
  * @author USUARIO
  */
 public class EstadoView extends JFrame {
+    
+    private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     
       private JButton btnEstoyBien;
     private JButton btnNecesitoAyuda;
@@ -111,9 +118,20 @@ public class EstadoView extends JFrame {
         lblMensaje.setText(texto);
     }
     
+     public void mostrarMensajes(List<MensajeEstado> mensajes) {
+        modeloTabla.setRowCount(0);
+        for (MensajeEstado m : mensajes) {
+            modeloTabla.addRow(new Object[]{
+                m.getFechaCreacion().format(FORMATO_FECHA),
+                m.getEstado().getEtiqueta(),
+                m.isEnviado() ? "Enviado" : "Pendiente en cola"
+            });
+        }
+    }
+    
     public JButton getBtnEstoyBien() { return btnEstoyBien; }
     public JButton getBtnNecesitoAyuda() { return btnNecesitoAyuda; }
     public JButton getBtnSincronizar() { return btnSincronizar; }
     public JCheckBox getChkSinConexion() { return chkSinConexion; }
 }
-        
+ 
