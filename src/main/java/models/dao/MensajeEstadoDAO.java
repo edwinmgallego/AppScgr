@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 
-
 public class MensajeEstadoDAO extends BaseDAO {
 
     private static final String CREAR_TABLA =
@@ -33,25 +32,41 @@ public class MensajeEstadoDAO extends BaseDAO {
         return CREAR_TABLA;
     }
 
+
     public boolean registrarEstado(MensajeEstado mensaje) {
-        String sql = "INSERT INTO estados_supervivencia (usuario_id, estado, latitud, longitud, fecha_creacion) "
-                   + "VALUES (?, ?, ?, ?, ?)";
+        String insertar = "INSERT INTO estados_supervivencia (usuario_id, estado, latitud, longitud, fecha_creacion) "
+                        + "VALUES (?, ?, ?, ?, ?)";
+        String actualizarRed = "UPDATE familiares SET estado_emergencia = ? WHERE familiar_usuario_id = ?";
         try {
             Connection conn = conexion();
             asegurarTabla(conn);
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setInt(1, mensaje.getUsuarioId());
-                pstmt.setString(2, mensaje.getEstado().name());
+            conn.setAutoCommit(false);
+            try (PreparedStatement psInsertar = conn.prepareStatement(insertar);
+                 PreparedStatement psRed = conn.prepareStatement(actualizarRed)) {
+                psInsertar.setInt(1, mensaje.getUsuarioId());
+                psInsertar.setString(2, mensaje.getEstado().name());
                 if (mensaje.tieneUbicacion()) {
-                    pstmt.setDouble(3, mensaje.getLatitud());
-                    pstmt.setDouble(4, mensaje.getLongitud());
+                    psInsertar.setDouble(3, mensaje.getLatitud());
+                    psInsertar.setDouble(4, mensaje.getLongitud());
                 } else {
-                    pstmt.setNull(3, Types.DOUBLE);
-                    pstmt.setNull(4, Types.DOUBLE);
+                    psInsertar.setNull(3, Types.DOUBLE);
+                    psInsertar.setNull(4, Types.DOUBLE);
                 }
-                
-                pstmt.setTimestamp(5, Timestamp.valueOf(mensaje.getFechaCreacion()));
-                return pstmt.executeUpdate() > 0;
+
+                psInsertar.setTimestamp(5, Timestamp.valueOf(mensaje.getFechaCreacion()));
+                psInsertar.executeUpdate();
+
+                psRed.setString(1, mensaje.getEstado().getEstadoRed());
+                psRed.setInt(2, mensaje.getUsuarioId());
+                psRed.executeUpdate();
+
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
             System.err.println("Error DAO al registrar el estado: " + e.getMessage());
