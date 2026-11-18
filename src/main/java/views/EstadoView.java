@@ -117,6 +117,9 @@ public class EstadoView extends JFrame {
     public void setMensaje(String texto) {
         lblMensaje.setText(texto);
     }
+    public void setUsuario(String nombre) {
+        setTitle("Alertas y Estado de Supervivencia - " + nombre);
+    }
     
      public void mostrarMensajes(List<MensajeEstado> mensajes) {
         modeloTabla.setRowCount(0);
