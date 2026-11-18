@@ -1,12 +1,16 @@
 package models.dao;
 
+import models.EstadoSupervivencia;
 import models.MensajeEstado;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Persistencia de los mensajes de estado de supervivencia (RF-01, RF-02).
@@ -84,5 +88,51 @@ public class MensajeEstadoDAO extends BaseDAO {
             System.err.println("Error DAO al registrar el estado: " + e.getMessage());
             return false;
         }
+    }
+
+    // READ: historial de estados de un usuario (el más reciente primero), con su nombre y teléfono
+    public List<MensajeEstado> obtenerPorUsuario(int usuarioId) {
+        return obtenerPorUsuario(usuarioId, 0);
+    }
+
+    // Sobrecarga: igual que la anterior pero trae como máximo "limite" estados (limite <= 0 = todos)
+    public List<MensajeEstado> obtenerPorUsuario(int usuarioId, int limite) {
+        List<MensajeEstado> lista = new ArrayList<>();
+        String sql = "SELECT e.id, e.usuario_id, e.estado, e.latitud, e.longitud, e.fecha_creacion, "
+                   + "u.nombre_completo, u.telefono "
+                   + "FROM estados_supervivencia e LEFT JOIN usuarios u ON u.id = e.usuario_id "
+                   + "WHERE e.usuario_id = ? ORDER BY e.fecha_creacion DESC, e.id DESC"
+                   + (limite > 0 ? " LIMIT " + limite : "");
+        try {
+            Connection conn = conexion();
+            asegurarTabla(conn);
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, usuarioId);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                        MensajeEstado m = new MensajeEstado(
+                                rs.getInt("id"),
+                                rs.getInt("usuario_id"),
+                                EstadoSupervivencia.valueOf(rs.getString("estado")),
+                                rs.getTimestamp("fecha_creacion").toLocalDateTime(),
+                                true); // Si está en la base de datos, ya fue enviado
+                        m.setNombreUsuario(rs.getString("nombre_completo"));
+                        m.setTelefonoUsuario(rs.getString("telefono"));
+                        double lat = rs.getDouble("latitud");
+                        if (!rs.wasNull()) {
+                            m.setLatitud(lat);
+                        }
+                        double lon = rs.getDouble("longitud");
+                        if (!rs.wasNull()) {
+                            m.setLongitud(lon);
+                        }
+                        lista.add(m);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al obtener los estados: " + e.getMessage());
+        }
+        return lista;
     }
 }
