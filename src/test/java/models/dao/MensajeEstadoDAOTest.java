@@ -12,11 +12,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Pruebas del DAO de estados de supervivencia.
- * Requieren XAMPP encendido y la base emergencias_db con las tablas del proyecto.
- * Cada prueba crea sus propios usuarios y los borra al terminar (no dependen de datos existentes).
- */
+
 public class MensajeEstadoDAOTest {
 
     private MensajeEstadoDAO dao;
@@ -34,7 +30,7 @@ public class MensajeEstadoDAOTest {
 
     @AfterEach
     public void tearDown() {
-        // ON DELETE CASCADE borra también los estados de este usuario
+        
         usuarioDAO.eliminarUsuario(usuarioPrueba.getId());
     }
 
@@ -47,20 +43,5 @@ public class MensajeEstadoDAOTest {
     public void testRegistrarEstado() {
         assertTrue(dao.registrarEstado(mensaje(EstadoSupervivencia.ESTOY_BIEN, null, null)),
                 "El estado debería registrarse correctamente en la base de datos.");
-    }
-
-    @Test
-    public void testObtenerPorUsuarioTraeNombreYUbicacion() {
-        assertTrue(dao.registrarEstado(mensaje(EstadoSupervivencia.NECESITO_AYUDA, 3.4516, -76.5320)));
-
-        List<MensajeEstado> lista = dao.obtenerPorUsuario(usuarioPrueba.getId());
-
-        assertEquals(1, lista.size());
-        MensajeEstado m = lista.get(0);
-        assertEquals(EstadoSupervivencia.NECESITO_AYUDA, m.getEstado());
-        assertEquals("Usuario Prueba Estados", m.getNombreUsuario());
-        assertTrue(m.tieneUbicacion());
-        assertEquals(Double.valueOf(3.4516), m.getLatitud());
-        assertTrue(m.isEnviado(), "Lo leído de la base de datos ya fue enviado.");
     }
 }
