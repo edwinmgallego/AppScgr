@@ -43,26 +43,42 @@ public class MensajeEstadoDAO extends BaseDAO {
         return CREAR_TABLA;
     }
 
-    // CREATE: guarda un estado ya "enviado" al servidor
+    // CREATE + UPDATE con transacción: guarda el estado y lo refleja en la red familiar.
+    // Si algo falla se deshace todo y el mensaje se queda en la cola para reintentar.
     public boolean registrarEstado(MensajeEstado mensaje) {
-        String sql = "INSERT INTO estados_supervivencia (usuario_id, estado, latitud, longitud, fecha_creacion) "
-                   + "VALUES (?, ?, ?, ?, ?)";
+        String insertar = "INSERT INTO estados_supervivencia (usuario_id, estado, latitud, longitud, fecha_creacion) "
+                        + "VALUES (?, ?, ?, ?, ?)";
+        String actualizarRed = "UPDATE familiares SET estado_emergencia = ? WHERE familiar_usuario_id = ?";
         try {
             Connection conn = conexion();
             asegurarTabla(conn);
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setInt(1, mensaje.getUsuarioId());
-                pstmt.setString(2, mensaje.getEstado().name());
+            conn.setAutoCommit(false); // Inicia la transacción
+            try (PreparedStatement psInsertar = conn.prepareStatement(insertar);
+                 PreparedStatement psRed = conn.prepareStatement(actualizarRed)) {
+                psInsertar.setInt(1, mensaje.getUsuarioId());
+                psInsertar.setString(2, mensaje.getEstado().name());
                 if (mensaje.tieneUbicacion()) {
-                    pstmt.setDouble(3, mensaje.getLatitud());
-                    pstmt.setDouble(4, mensaje.getLongitud());
+                    psInsertar.setDouble(3, mensaje.getLatitud());
+                    psInsertar.setDouble(4, mensaje.getLongitud());
                 } else {
-                    pstmt.setNull(3, Types.DOUBLE);
-                    pstmt.setNull(4, Types.DOUBLE);
+                    psInsertar.setNull(3, Types.DOUBLE);
+                    psInsertar.setNull(4, Types.DOUBLE);
                 }
                 // Se guarda la fecha original de emisión, no la del momento de sincronizar
-                pstmt.setTimestamp(5, Timestamp.valueOf(mensaje.getFechaCreacion()));
-                return pstmt.executeUpdate() > 0;
+                psInsertar.setTimestamp(5, Timestamp.valueOf(mensaje.getFechaCreacion()));
+                psInsertar.executeUpdate();
+
+                psRed.setString(1, mensaje.getEstado().getEstadoRed());
+                psRed.setInt(2, mensaje.getUsuarioId());
+                psRed.executeUpdate(); // Puede afectar 0 filas: nadie lo tiene como familiar
+
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true); // La conexión es compartida: se deja como estaba
             }
         } catch (SQLException e) {
             System.err.println("Error DAO al registrar el estado: " + e.getMessage());
