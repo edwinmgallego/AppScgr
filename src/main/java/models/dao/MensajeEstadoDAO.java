@@ -1,12 +1,17 @@
 package models.dao;
 
+import models.EstadoSupervivencia;
 import models.MensajeEstado;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class MensajeEstadoDAO extends BaseDAO {
 
@@ -32,7 +37,6 @@ public class MensajeEstadoDAO extends BaseDAO {
         return CREAR_TABLA;
     }
 
-
     public boolean registrarEstado(MensajeEstado mensaje) {
         String insertar = "INSERT INTO estados_supervivencia (usuario_id, estado, latitud, longitud, fecha_creacion) "
                         + "VALUES (?, ?, ?, ?, ?)";
@@ -40,7 +44,7 @@ public class MensajeEstadoDAO extends BaseDAO {
         try {
             Connection conn = conexion();
             asegurarTabla(conn);
-            conn.setAutoCommit(false);
+            conn.setAutoCommit(false); 
             try (PreparedStatement psInsertar = conn.prepareStatement(insertar);
                  PreparedStatement psRed = conn.prepareStatement(actualizarRed)) {
                 psInsertar.setInt(1, mensaje.getUsuarioId());
@@ -52,13 +56,13 @@ public class MensajeEstadoDAO extends BaseDAO {
                     psInsertar.setNull(3, Types.DOUBLE);
                     psInsertar.setNull(4, Types.DOUBLE);
                 }
-
+                
                 psInsertar.setTimestamp(5, Timestamp.valueOf(mensaje.getFechaCreacion()));
                 psInsertar.executeUpdate();
 
                 psRed.setString(1, mensaje.getEstado().getEstadoRed());
                 psRed.setInt(2, mensaje.getUsuarioId());
-                psRed.executeUpdate();
+                psRed.executeUpdate(); 
 
                 conn.commit();
                 return true;
@@ -66,11 +70,56 @@ public class MensajeEstadoDAO extends BaseDAO {
                 conn.rollback();
                 throw e;
             } finally {
-                conn.setAutoCommit(true);
+                conn.setAutoCommit(true); 
             }
         } catch (SQLException e) {
             System.err.println("Error DAO al registrar el estado: " + e.getMessage());
             return false;
         }
+    }
+
+   
+    public List<MensajeEstado> obtenerPorUsuario(int usuarioId) {
+        return obtenerPorUsuario(usuarioId, 0);
+    }
+
+    public List<MensajeEstado> obtenerPorUsuario(int usuarioId, int limite) {
+        List<MensajeEstado> lista = new ArrayList<>();
+        String sql = "SELECT e.id, e.usuario_id, e.estado, e.latitud, e.longitud, e.fecha_creacion, "
+                   + "u.nombre_completo, u.telefono "
+                   + "FROM estados_supervivencia e LEFT JOIN usuarios u ON u.id = e.usuario_id "
+                   + "WHERE e.usuario_id = ? ORDER BY e.fecha_creacion DESC, e.id DESC"
+                   + (limite > 0 ? " LIMIT " + limite : "");
+        try {
+            Connection conn = conexion();
+            asegurarTabla(conn);
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, usuarioId);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                        MensajeEstado m = new MensajeEstado(
+                                rs.getInt("id"),
+                                rs.getInt("usuario_id"),
+                                EstadoSupervivencia.valueOf(rs.getString("estado")),
+                                rs.getTimestamp("fecha_creacion").toLocalDateTime(),
+                                true); 
+                        m.setNombreUsuario(rs.getString("nombre_completo"));
+                        m.setTelefonoUsuario(rs.getString("telefono"));
+                        double lat = rs.getDouble("latitud");
+                        if (!rs.wasNull()) {
+                            m.setLatitud(lat);
+                        }
+                        double lon = rs.getDouble("longitud");
+                        if (!rs.wasNull()) {
+                            m.setLongitud(lon);
+                        }
+                        lista.add(m);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al obtener los estados: " + e.getMessage());
+        }
+        return lista;
     }
 }
