@@ -60,3 +60,16 @@ El mapa interactivo se renderiza utilizando la librería `JXMapViewer2` (importa
 
 El código base incluye un paquete de pruebas en `Test Packages -> models.dao -> IncidenteDAOTest.java`. 
 Esta clase utiliza anotaciones como `@Test` y sentencias como `assertTrue()` para validar que las sentencias SQL funcionan correctamente sin necesidad de abrir la interfaz gráfica. **Cada equipo debe desarrollar pruebas unitarias para sus propios DAOs.**
+
+---
+
+## 🚨 5. Módulo de Alertas y Estado de Supervivencia (Equipo 2, RF-01 y RF-02)
+
+Desde el mapa: menú **Cuenta → Reportar mi estado**. Permite emitir **"Estoy bien"** o **"Necesito ayuda"**.
+
+* **Mensaje:** incluye el usuario de la sesión (id, nombre y teléfono), el estado, la fecha en que se emitió y, si el usuario hizo clic en el mapa, su ubicación (latitud/longitud).
+* **Sin conexión (RF-02):** el checkbox *"Simular que no hay conexión"* hace que los mensajes se guarden en una cola FIFO (`ColaMensajes`). Al recuperar la conexión se envían en el mismo orden en que se emitieron; si un envío falla, ese mensaje y los siguientes se conservan para reintentar.
+* **Persistencia:** `MensajeEstadoDAO` guarda en la tabla `estados_supervivencia` (se crea sola la primera vez; también está en `sql/estados_supervivencia.sql`).
+* **Red familiar:** al enviarse un estado, se actualiza `familiares.estado_emergencia` de quienes tienen al usuario en su red (`SEGURO` o `NECESITA AYUDA`), y se ve en *Mi red familiar*.
+* **Pruebas:** `ColaMensajesTest` y `MensajeEstadoTest` no necesitan base de datos; `MensajeEstadoDAOTest` requiere XAMPP encendido.
+* **Diseño orientado a objetos:** `Mensaje` (abstracta) es la base de `MensajeEstado`; `ColaBase<T>` (abstracta) es la base de `ColaMensajes`; `BaseDAO` (abstracta) es la base de `MensajeEstadoDAO`; `BaseController<V>` (abstracta) es la base de `EstadoController`. Los atributos son privados con getters/setters, hay constructores y métodos sobrecargados (`MensajeEstado`, `ColaBase.sincronizar`, `MensajeEstadoDAO.obtenerPorUsuario`) y métodos sobrescritos (`getResumen`, `toString`, `alEnviar`, `getNombreTabla`, `inicializarEventos`, y los métodos de cada constante de `EstadoSupervivencia`).
