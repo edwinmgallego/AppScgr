@@ -1,5 +1,13 @@
 package models.dao;
 
+import models.MensajeEstado;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
+
 
 public class MensajeEstadoDAO extends BaseDAO {
 
@@ -23,5 +31,31 @@ public class MensajeEstadoDAO extends BaseDAO {
     @Override
     protected String getSqlCrearTabla() {
         return CREAR_TABLA;
+    }
+
+    public boolean registrarEstado(MensajeEstado mensaje) {
+        String sql = "INSERT INTO estados_supervivencia (usuario_id, estado, latitud, longitud, fecha_creacion) "
+                   + "VALUES (?, ?, ?, ?, ?)";
+        try {
+            Connection conn = conexion();
+            asegurarTabla(conn);
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, mensaje.getUsuarioId());
+                pstmt.setString(2, mensaje.getEstado().name());
+                if (mensaje.tieneUbicacion()) {
+                    pstmt.setDouble(3, mensaje.getLatitud());
+                    pstmt.setDouble(4, mensaje.getLongitud());
+                } else {
+                    pstmt.setNull(3, Types.DOUBLE);
+                    pstmt.setNull(4, Types.DOUBLE);
+                }
+                
+                pstmt.setTimestamp(5, Timestamp.valueOf(mensaje.getFechaCreacion()));
+                return pstmt.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al registrar el estado: " + e.getMessage());
+            return false;
+        }
     }
 }
