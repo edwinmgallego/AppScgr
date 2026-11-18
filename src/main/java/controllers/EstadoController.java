@@ -36,4 +36,26 @@ public class EstadoController extends BaseController<EstadoView> {
         }
         inicializarEventos();
     }
+    
+    
+    private void sincronizar() {
+        int enviados = cola.sincronizar(dao::registrarEstado);
+        int pendientes = cola.cantidadPendientes();
+
+        if (pendientes == 0 && enviados > 0) {
+            vista.setMensaje(enviados == 1
+                    ? "Mensaje enviado correctamente."
+                    : "Conexión recuperada: se enviaron " + enviados + " mensajes pendientes.");
+        } else if (pendientes > 0) {
+            vista.setMensaje("No se pudo enviar. Quedan " + pendientes
+                    + " mensaje(s) en la cola; se reintentará al sincronizar.");
+        }
+        actualizarVista();
+    }
+    
+    private void actualizarVista() {
+        vista.mostrarMensajes(historialSesion);
+        vista.setPendientes(cola.cantidadPendientes());
+    }
+    
 }
