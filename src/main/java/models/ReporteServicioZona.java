@@ -6,7 +6,7 @@ package models;
  *
  * ELEMENTOS CLAVE PARA SUSTENTACION:
  * - extends + super(): Reutiliza los atributos y logica de inicializacion de ReporteInfraestructura.
- * - @Override: Aplica polimorfismo al adaptar generarResumenEstado() y esCritico() a servicios domiciliarios.
+ * - @Override: Aplica polimorfismo al adaptar generarResumenEstado(), esCritico() y toString().
  */
 public class ReporteServicioZona extends ReporteInfraestructura {
     private String servicio;
@@ -30,6 +30,11 @@ public class ReporteServicioZona extends ReporteInfraestructura {
     @Override
     public boolean esCritico() {
         return "CAIDO".equalsIgnoreCase(this.estado);
+    }
+
+    @Override
+    public String toString() {
+        return generarResumenEstado() + " (Verificaciones: " + verificaciones + ")";
     }
 
     public String getServicio() { return servicio; }

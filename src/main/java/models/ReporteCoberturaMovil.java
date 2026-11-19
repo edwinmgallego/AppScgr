@@ -6,7 +6,7 @@ package models;
  * y renderizarse como marcadores en OpenStreetMap.
  *
  * ELEMENTOS CLAVE PARA SUSTENTACION:
- * - Geolocalizacion: Incorpora latitud y longitud para posicionamiento exacto en JXMapViewer2.
+ * - Validacion geografica: Garantiza que latitud y longitud esten en rangos terrestres validos.
  * - Polimorfismo: Responde a los mismos metodos de la interfaz que ReporteServicioZona, pero
  *   evaluando criticidad segun la perdida total de senal del operador movil.
  */
@@ -24,8 +24,8 @@ public class ReporteCoberturaMovil extends ReporteInfraestructura {
         super(usuarioId, zonaBarrio, observaciones);
         this.operador = operador;
         this.nivelFalla = nivelFalla;
-        this.latitud = latitud;
-        this.longitud = longitud;
+        setLatitud(latitud);   // Usa los setters validados desde el constructor
+        setLongitud(longitud);
     }
 
     @Override
@@ -38,6 +38,11 @@ public class ReporteCoberturaMovil extends ReporteInfraestructura {
         return "SIN_SENAL".equalsIgnoreCase(this.nivelFalla);
     }
 
+    @Override
+    public String toString() {
+        return generarResumenEstado();
+    }
+
     public String getOperador() { return operador; }
     public void setOperador(String operador) { this.operador = operador; }
 
@@ -45,8 +50,18 @@ public class ReporteCoberturaMovil extends ReporteInfraestructura {
     public void setNivelFalla(String nivelFalla) { this.nivelFalla = nivelFalla; }
 
     public double getLatitud() { return latitud; }
-    public void setLatitud(double latitud) { this.latitud = latitud; }
+    public void setLatitud(double latitud) {
+        if (latitud < -90.0 || latitud > 90.0) {
+            throw new IllegalArgumentException("Latitud fuera de rango válido (-90 a 90).");
+        }
+        this.latitud = latitud;
+    }
 
     public double getLongitud() { return longitud; }
-    public void setLongitud(double longitud) { this.longitud = longitud; }
+    public void setLongitud(double longitud) {
+        if (longitud < -180.0 || longitud > 180.0) {
+            throw new IllegalArgumentException("Longitud fuera de rango válido (-180 a 180).");
+        }
+        this.longitud = longitud;
+    }
 }
