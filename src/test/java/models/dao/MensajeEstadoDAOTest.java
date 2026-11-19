@@ -7,6 +7,7 @@ import models.Usuario;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import utils.ActualizadorBD;
 
 import java.util.List;
 
@@ -20,6 +21,7 @@ public class MensajeEstadoDAOTest {
 
     @BeforeEach
     public void setUp() {
+        ActualizadorBD.actualizar();
         dao = new MensajeEstadoDAO();
         usuarioDAO = new UsuarioDAO();
         usuarioPrueba = new Usuario(0, "T2" + System.currentTimeMillis(), "Usuario Prueba Estados", "3000000000");
@@ -29,7 +31,6 @@ public class MensajeEstadoDAOTest {
 
     @AfterEach
     public void tearDown() {
-
         usuarioDAO.eliminarUsuario(usuarioPrueba.getId());
     }
 
@@ -45,18 +46,30 @@ public class MensajeEstadoDAOTest {
     }
 
     @Test
-    public void testObtenerPorUsuarioTraeNombreYUbicacion() {
+    public void testRegistrarEstadoGuardaLaUltimaUbicacion() {
         assertTrue(dao.registrarEstado(mensaje(EstadoSupervivencia.NECESITO_AYUDA, 3.4516, -76.5320)));
 
-        List<MensajeEstado> lista = dao.obtenerPorUsuario(usuarioPrueba.getId());
+        double[] ubicacion = dao.obtenerUltimaUbicacion(usuarioPrueba.getId());
 
-        assertEquals(1, lista.size());
-        MensajeEstado m = lista.get(0);
-        assertEquals(EstadoSupervivencia.NECESITO_AYUDA, m.getEstado());
-        assertEquals("Usuario Prueba Estados", m.getNombreUsuario());
-        assertTrue(m.tieneUbicacion());
-        assertEquals(Double.valueOf(3.4516), m.getLatitud());
-        assertTrue(m.isEnviado(), "Lo leído de la base de datos ya fue enviado.");
+        assertNotNull(ubicacion, "Debería haberse guardado la ubicación del usuario.");
+        assertEquals(3.4516, ubicacion[0], 0.0000001);
+        assertEquals(-76.5320, ubicacion[1], 0.0000001);
+    }
+
+    @Test
+    public void testUnEstadoSinUbicacionNoBorraLaUltimaUbicacion() {
+        assertTrue(dao.registrarEstado(mensaje(EstadoSupervivencia.NECESITO_AYUDA, 3.4516, -76.5320)));
+        assertTrue(dao.registrarEstado(mensaje(EstadoSupervivencia.ESTOY_BIEN, null, null)));
+
+        double[] ubicacion = dao.obtenerUltimaUbicacion(usuarioPrueba.getId());
+
+        assertNotNull(ubicacion, "La ubicación anterior debería conservarse.");
+        assertEquals(3.4516, ubicacion[0], 0.0000001);
+    }
+
+    @Test
+    public void testUsuarioSinUbicacionDevuelveNull() {
+        assertNull(dao.obtenerUltimaUbicacion(usuarioPrueba.getId()));
     }
 
     @Test
@@ -65,7 +78,6 @@ public class MensajeEstadoDAOTest {
         assertTrue(usuarioDAO.registrarUsuario(dueno, "clave123"));
         FamiliarDAO familiarDAO = new FamiliarDAO();
         try {
-
             assertTrue(familiarDAO.vincularFamiliar(dueno.getId(), usuarioPrueba), familiarDAO.getUltimoError());
 
             assertTrue(dao.registrarEstado(mensaje(EstadoSupervivencia.NECESITO_AYUDA, null, null)));
@@ -73,7 +85,6 @@ public class MensajeEstadoDAOTest {
             List<Familiar> red = familiarDAO.obtenerFamiliares(dueno.getId());
             assertEquals(1, red.size());
             assertEquals("NECESITA AYUDA", red.get(0).getEstadoEmergencia());
-            
         } finally {
             for (Familiar f : familiarDAO.obtenerFamiliares(dueno.getId())) {
                 familiarDAO.desvincularFamiliar(f.getId(), dueno.getId());

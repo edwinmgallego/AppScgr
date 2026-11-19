@@ -16,7 +16,9 @@ public abstract class BaseDAO {
 
     protected abstract String getNombreTabla();
 
-    protected abstract String getSqlCrearTabla();
+    protected String getSqlCrearTabla() {
+        return null;
+    }
 
     protected Connection conexion() throws SQLException {
         Connection conn = ConexionDB.getInstance().getConnection();
@@ -27,12 +29,16 @@ public abstract class BaseDAO {
     }
 
     protected void asegurarTabla(Connection conn) throws SQLException {
+        String sql = getSqlCrearTabla();
+        if (sql == null) {
+            return; 
+        }
         synchronized (tablasVerificadas) {
             if (tablasVerificadas.contains(getNombreTabla())) {
                 return;
             }
             try (Statement st = conn.createStatement()) {
-                st.executeUpdate(getSqlCrearTabla());
+                st.executeUpdate(sql);
             }
             tablasVerificadas.add(getNombreTabla());
         }
