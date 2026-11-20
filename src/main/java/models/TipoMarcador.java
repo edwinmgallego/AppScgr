@@ -17,6 +17,7 @@ public enum TipoMarcador {
     VIA_CERRADA("Vía cerrada", true),
     DERRUMBE("Derrumbe", true),
     OTRO("Otro incidente", false),
+    ESTACION_MIO("Estación MIO", false),
     SELECCION("Punto seleccionado", false);
 
     private final String etiqueta;
