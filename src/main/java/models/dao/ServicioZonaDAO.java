@@ -60,6 +60,26 @@ public class ServicioZonaDAO extends BaseDAO {
         }
     }
 
+    public List<ReporteServicioZona> obtenerServiciosPorBarrio(String barrio) {
+        List<ReporteServicioZona> lista = new ArrayList<>();
+        String sql = "SELECT * FROM estado_servicios_zona WHERE zona_barrio LIKE ? ORDER BY fecha_actualizacion DESC";
+        try {
+            Connection conn = conexion();
+            asegurarTabla(conn);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, "%" + barrio.trim() + "%");
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        lista.add(mapearFila(rs));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al consultar servicios por barrio: " + e.getMessage());
+        }
+        return lista;
+    }
+
     protected ReporteServicioZona mapearFila(ResultSet rs) throws SQLException {
         ReporteServicioZona reporte = new ReporteServicioZona();
         reporte.setId(rs.getInt("id"));
