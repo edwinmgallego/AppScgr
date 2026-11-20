@@ -80,6 +80,40 @@ public class ServicioZonaDAO extends BaseDAO {
         return lista;
     }
 
+    public List<ReporteServicioZona> listarTodosLosServicios() {
+        List<ReporteServicioZona> lista = new ArrayList<>();
+        String sql = "SELECT * FROM estado_servicios_zona ORDER BY fecha_actualizacion DESC";
+        try {
+            Connection conn = conexion();
+            asegurarTabla(conn);
+            try (PreparedStatement ps = conn.prepareStatement(sql);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapearFila(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al listar todos los servicios: " + e.getMessage());
+        }
+        return lista;
+    }
+
+    public boolean actualizarEstadoServicio(int idReporte, String nuevoEstado) {
+        String sql = "UPDATE estado_servicios_zona SET estado = ? WHERE id = ?";
+        try {
+            Connection conn = conexion();
+            asegurarTabla(conn);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, nuevoEstado);
+                ps.setInt(2, idReporte);
+                return ps.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al actualizar estado del servicio: " + e.getMessage());
+            return false;
+        }
+    }
+
     protected ReporteServicioZona mapearFila(ResultSet rs) throws SQLException {
         ReporteServicioZona reporte = new ReporteServicioZona();
         reporte.setId(rs.getInt("id"));
