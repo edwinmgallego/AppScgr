@@ -41,6 +41,25 @@ public class ServicioZonaDAO extends BaseDAO {
                 + ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;";
     }
 
+    public boolean registrarReporteServicio(ReporteServicioZona reporte) {
+        String sql = "INSERT INTO estado_servicios_zona (usuario_id, zona_barrio, servicio, estado, observaciones) VALUES (?, ?, ?, ?, ?)";
+        try {
+            Connection conn = conexion();
+            asegurarTabla(conn);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, reporte.getUsuarioId());
+                ps.setString(2, reporte.getZonaBarrio());
+                ps.setString(3, reporte.getServicio());
+                ps.setString(4, reporte.getEstado());
+                ps.setString(5, reporte.getObservaciones());
+                return ps.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al registrar servicio en zona: " + e.getMessage());
+            return false;
+        }
+    }
+
     protected ReporteServicioZona mapearFila(ResultSet rs) throws SQLException {
         ReporteServicioZona reporte = new ReporteServicioZona();
         reporte.setId(rs.getInt("id"));
