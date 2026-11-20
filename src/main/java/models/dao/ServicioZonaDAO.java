@@ -1,0 +1,56 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package models.dao;
+
+/**
+ *
+ * @author 57323
+ */
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import models.ReporteServicioZona;
+
+
+public class ServicioZonaDAO extends BaseDAO {
+
+    @Override
+    protected String getNombreTabla() {
+        return "estado_servicios_zona";
+    }
+
+    @Override
+    protected String getSqlCrearTabla() {
+        return "CREATE TABLE IF NOT EXISTS `estado_servicios_zona` ("
+                + "`id` int(11) NOT NULL AUTO_INCREMENT,"
+                + "`usuario_id` int(11) NOT NULL DEFAULT 1,"
+                + "`zona_barrio` varchar(100) NOT NULL,"
+                + "`servicio` enum('AGUA','ENERGIA','TELECOMUNICACIONES') NOT NULL,"
+                + "`estado` enum('OPERANDO','CON_FALLAS','CAIDO') NOT NULL,"
+                + "`observaciones` text DEFAULT NULL,"
+                + "`verificaciones` int(11) DEFAULT 0,"
+                + "`fecha_actualizacion` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),"
+                + "PRIMARY KEY (`id`),"
+                + "KEY `usuario_id` (`usuario_id`),"
+                + "CONSTRAINT `fk_servicios_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;";
+    }
+
+    protected ReporteServicioZona mapearFila(ResultSet rs) throws SQLException {
+        ReporteServicioZona reporte = new ReporteServicioZona();
+        reporte.setId(rs.getInt("id"));
+        reporte.setUsuarioId(rs.getInt("usuario_id"));
+        reporte.setZonaBarrio(rs.getString("zona_barrio"));
+        reporte.setServicio(rs.getString("servicio"));
+        reporte.setEstado(rs.getString("estado"));
+        reporte.setObservaciones(rs.getString("observaciones"));
+        reporte.setVerificaciones(rs.getInt("verificaciones"));
+        reporte.setFechaReporte(rs.getTimestamp("fecha_actualizacion"));
+        return reporte;
+    }
+}
