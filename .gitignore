@@ -1,1 +1,19 @@
 /target/
+
+# NetBeans
+/nbproject/private/
+/build/
+/dist/
+/nbbuild/
+/nbdist/
+nbactions.xml
+nb-configuration.xml
+
+# Salidas generadas por rutas.Main
+/salida/
+
+# Sistema / IDE
+.DS_Store
+Thumbs.db
+.idea/
+*.iml

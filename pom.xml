@@ -43,4 +43,21 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Maven 3.8 trae por defecto compiler 3.1 (ignora maven.compiler.release) y surefire 2.12.4
+                 (no detecta JUnit 5). Fijar versiones garantiza que "mvn test" compile en Java 21 y ejecute las pruebas. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>
