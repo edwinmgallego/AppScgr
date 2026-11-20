@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS `estado_servicios_zona` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `usuario_id` int(11) NOT NULL DEFAULT 1,
+  `zona_barrio` varchar(100) NOT NULL,
+  `servicio` enum('AGUA','ENERGIA','TELECOMUNICACIONES') NOT NULL,
+  `estado` enum('OPERANDO','CON_FALLAS','CAIDO') NOT NULL,
+  `observaciones` text DEFAULT NULL,
+  `verificaciones` int(11) DEFAULT 0,
+  `fecha_actualizacion` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `usuario_id` (`usuario_id`),
+  CONSTRAINT `fk_servicios_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
