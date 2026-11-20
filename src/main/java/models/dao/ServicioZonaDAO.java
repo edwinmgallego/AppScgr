@@ -42,6 +42,9 @@ public class ServicioZonaDAO extends BaseDAO {
     }
 
     public boolean registrarReporteServicio(ReporteServicioZona reporte) {
+        if (reporte == null || reporte.getZonaBarrio() == null) {
+            return false;
+        }
         String sql = "INSERT INTO estado_servicios_zona (usuario_id, zona_barrio, servicio, estado, observaciones) VALUES (?, ?, ?, ?, ?)";
         try {
             Connection conn = conexion();
@@ -61,6 +64,9 @@ public class ServicioZonaDAO extends BaseDAO {
     }
 
     public List<ReporteServicioZona> obtenerServiciosPorBarrio(String barrio) {
+        if (barrio == null || barrio.trim().isEmpty()) {
+            return listarTodosLosServicios();
+        }
         List<ReporteServicioZona> lista = new ArrayList<>();
         String sql = "SELECT * FROM estado_servicios_zona WHERE zona_barrio LIKE ? ORDER BY fecha_actualizacion DESC";
         try {
@@ -110,6 +116,21 @@ public class ServicioZonaDAO extends BaseDAO {
             }
         } catch (SQLException e) {
             System.err.println("Error DAO al actualizar estado del servicio: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean eliminarReporte(int idReporte) {
+        String sql = "DELETE FROM estado_servicios_zona WHERE id = ?";
+        try {
+            Connection conn = conexion();
+            asegurarTabla(conn);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, idReporte);
+                return ps.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al eliminar reporte de servicio: " + e.getMessage());
             return false;
         }
     }
