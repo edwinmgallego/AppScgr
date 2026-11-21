@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import models.ReporteCoberturaMovil;
 
-
 public class CoberturaMovilDAO {
 
     public boolean registrarFallaCobertura(ReporteCoberturaMovil reporte) {
@@ -39,6 +38,23 @@ public class CoberturaMovilDAO {
             System.err.println("Error al registrar falla de cobertura movil: " + e.getMessage());
             return false;
         }
+    }
+
+    public List<ReporteCoberturaMovil> obtenerReportesSinSenal() {
+        List<ReporteCoberturaMovil> lista = new ArrayList<>();
+        String sql = "SELECT * FROM reportes_incidentes WHERE tipo_incidente = 'SIN_SENAL' AND estado = 'ACTIVO' ORDER BY fecha_reporte DESC";
+
+        try (Connection conn = ConexionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                lista.add(mapearFila(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al consultar reportes sin senal: " + e.getMessage());
+        }
+        return lista;
     }
 
     private ReporteCoberturaMovil mapearFila(ResultSet rs) throws SQLException {
