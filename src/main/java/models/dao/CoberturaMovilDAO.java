@@ -57,6 +57,25 @@ public class CoberturaMovilDAO {
         return lista;
     }
 
+    public List<ReporteCoberturaMovil> buscarPorOperadorOZona(String criterio) {
+        List<ReporteCoberturaMovil> lista = new ArrayList<>();
+        String sql = "SELECT * FROM reportes_incidentes WHERE tipo_incidente = 'SIN_SENAL' AND descripcion LIKE ? ORDER BY fecha_reporte DESC";
+
+        try (Connection conn = ConexionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, "%" + criterio.trim() + "%");
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapearFila(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al filtrar cobertura por operador o zona: " + e.getMessage());
+        }
+        return lista;
+    }
+
     private ReporteCoberturaMovil mapearFila(ResultSet rs) throws SQLException {
         ReporteCoberturaMovil reporte = new ReporteCoberturaMovil();
         reporte.setId(rs.getInt("id"));
