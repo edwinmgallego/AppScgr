@@ -16,7 +16,31 @@ import models.ReporteCoberturaMovil;
 
 public class CoberturaMovilDAO {
 
-    
+    public boolean registrarFallaCobertura(ReporteCoberturaMovil reporte) {
+        String sql = "INSERT INTO reportes_incidentes (usuario_id, tipo_incidente, descripcion, latitud, longitud, estado) "
+                   + "VALUES (?, 'SIN_SENAL', ?, ?, ?, 'ACTIVO')";
+
+        String descripcionFormateada = String.format("[BARRIO: %s | OPERADOR: %s | FALLA: %s] %s",
+                reporte.getZonaBarrio(),
+                reporte.getOperador(),
+                reporte.getNivelFalla(),
+                reporte.getObservaciones() != null ? reporte.getObservaciones() : "");
+
+        try (Connection conn = ConexionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, reporte.getUsuarioId());
+            ps.setString(2, descripcionFormateada.trim());
+            ps.setDouble(3, reporte.getLatitud());
+            ps.setDouble(4, reporte.getLongitud());
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error al registrar falla de cobertura movil: " + e.getMessage());
+            return false;
+        }
+    }
+
     private ReporteCoberturaMovil mapearFila(ResultSet rs) throws SQLException {
         ReporteCoberturaMovil reporte = new ReporteCoberturaMovil();
         reporte.setId(rs.getInt("id"));
@@ -29,7 +53,6 @@ public class CoberturaMovilDAO {
         String desc = rs.getString("descripcion");
         reporte.setObservaciones(desc);
 
-        
         if (desc != null && desc.startsWith("[BARRIO:")) {
             try {
                 int cierre = desc.indexOf("]");
@@ -51,4 +74,3 @@ public class CoberturaMovilDAO {
         return reporte;
     }
 }
-    
