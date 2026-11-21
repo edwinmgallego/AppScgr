@@ -13,9 +13,17 @@ import java.util.ArrayList;
 import java.util.List;
 import models.ReporteCoberturaMovil;
 
+/*
+ * PROPOSITO GENERAL: Objeto de Acceso a Datos (DAO) encargado de persistir y consultar
+ * los reportes de falta de cobertura movil en coordenadas especificas (RF-08) dentro
+ * de la tabla compartida 'reportes_incidentes' bajo el tipo 'SIN_SENAL'.
+ */
 public class CoberturaMovilDAO {
 
     public boolean registrarFallaCobertura(ReporteCoberturaMovil reporte) {
+        if (reporte == null || reporte.getZonaBarrio() == null || reporte.getOperador() == null) {
+            return false;
+        }
         String sql = "INSERT INTO reportes_incidentes (usuario_id, tipo_incidente, descripcion, latitud, longitud, estado) "
                    + "VALUES (?, 'SIN_SENAL', ?, ?, ?, 'ACTIVO')";
 
@@ -58,6 +66,9 @@ public class CoberturaMovilDAO {
     }
 
     public List<ReporteCoberturaMovil> buscarPorOperadorOZona(String criterio) {
+        if (criterio == null || criterio.trim().isEmpty()) {
+            return obtenerReportesSinSenal();
+        }
         List<ReporteCoberturaMovil> lista = new ArrayList<>();
         String sql = "SELECT * FROM reportes_incidentes WHERE tipo_incidente = 'SIN_SENAL' AND descripcion LIKE ? ORDER BY fecha_reporte DESC";
 
@@ -74,6 +85,34 @@ public class CoberturaMovilDAO {
             System.err.println("Error al filtrar cobertura por operador o zona: " + e.getMessage());
         }
         return lista;
+    }
+
+    public boolean marcarSenalRestablecida(int idReporte) {
+        String sql = "UPDATE reportes_incidentes SET estado = 'RESUELTO' WHERE id = ? AND tipo_incidente = 'SIN_SENAL'";
+
+        try (Connection conn = ConexionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, idReporte);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error al marcar senal como restablecida: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean eliminarReporteCobertura(int idReporte) {
+        String sql = "DELETE FROM reportes_incidentes WHERE id = ? AND tipo_incidente = 'SIN_SENAL'";
+
+        try (Connection conn = ConexionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, idReporte);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error al eliminar reporte de cobertura: " + e.getMessage());
+            return false;
+        }
     }
 
     private ReporteCoberturaMovil mapearFila(ResultSet rs) throws SQLException {
