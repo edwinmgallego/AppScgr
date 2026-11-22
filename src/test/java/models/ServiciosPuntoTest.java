@@ -64,5 +64,20 @@ public class ServiciosPuntoTest {
         assertEquals(0, ServiciosPunto.desdeTexto("AGUA;VOLUNTARIOS=muchos").getVoluntariosNecesarios());
         assertEquals(0, ServiciosPunto.desdeTexto("AGUA;VOLUNTARIOS=-4").getVoluntariosNecesarios());
     }
+    @Test
+    public void testDesdeTextoIgnoraServiciosMalEscritos() {
+        ServiciosPunto s = ServiciosPunto.desdeTexto("AGUA,RARO=1,INTERNET");
 
+        assertEquals(List.of("AGUA", "INTERNET"), s.getServicios());
+    }
+
+    @Test
+    public void testAgregarRechazaVaciosYSeparadores() {
+        ServiciosPunto s = new ServiciosPunto();
+
+        assertThrows(IllegalArgumentException.class, () -> s.agregar(null));
+        assertThrows(IllegalArgumentException.class, () -> s.agregar("  "));
+        assertThrows(IllegalArgumentException.class, () -> s.agregar("AGUA,INTERNET"));
+        assertThrows(IllegalArgumentException.class, () -> s.agregar("A;B"));
+    }
 }
