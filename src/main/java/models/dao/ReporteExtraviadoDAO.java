@@ -147,6 +147,50 @@ public class ReporteExtraviadoDAO extends BaseDAO {
         }
     }
 
+    // Búsqueda con filtros OPCIONALES: si un filtro es null (o el texto está vacío) no se aplica.
+    // Ej: buscarPorFiltros(TipoReporte.MASCOTA, null, "collar") = mascotas (perdidas o encontradas) con "collar"
+    public List<ReporteExtraviado> buscarPorFiltros(TipoReporte tipo, EstadoReporte estado, String texto) {
+        List<ReporteExtraviado> lista = new ArrayList<>();
+
+        // Armamos el SQL según los filtros que lleguen; los valores van aparte para usarlos con ?
+        StringBuilder sql = new StringBuilder("SELECT " + COLUMNAS + " FROM reportes_extraviados WHERE 1 = 1");
+        List<String> valores = new ArrayList<>();
+
+        if (tipo != null) {
+            sql.append(" AND tipo = ?");
+            valores.add(tipo.name());
+        }
+        if (estado != null) {
+            sql.append(" AND estado = ?");
+            valores.add(estado.name());
+        }
+        if (texto != null && !texto.isBlank()) {
+            sql.append(" AND (nombre LIKE ? OR caracteristicas LIKE ?)");
+            String patron = "%" + texto.trim() + "%";
+            valores.add(patron);
+            valores.add(patron);
+        }
+        sql.append(" ORDER BY fecha_reporte DESC, id DESC");
+
+        try {
+            Connection conn = conexion();
+            try (PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+
+                for (int i = 0; i < valores.size(); i++) {
+                    pstmt.setString(i + 1, valores.get(i));   // los ? empiezan en 1
+                }
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                        lista.add(convertir(rs));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al filtrar los reportes extraviados: " + e.getMessage());
+        }
+        return lista;
+    }
+
     // ----------------- Métodos de apoyo (privados) -----------------
 
     // Valida lo mismo que exige la tabla: tipo, nombre y caracteristicas son NOT NULL
