@@ -51,4 +51,18 @@ public class ServiciosPuntoTest {
         assertEquals(";VOLUNTARIOS=3", s.aTexto());
     
 }
+    @Test
+    public void testNormalizaMayusculasEspaciosYRepetidos() {
+        ServiciosPunto s = ServiciosPunto.desdeTexto(" agua , Atención Medica,AGUA ");
+
+        assertEquals(List.of("AGUA", "ATENCIÓN_MEDICA"), s.getServicios());
+        assertTrue(s.contiene("agua"));
+    }
+
+    @Test
+    public void testVoluntariosIlegiblesONegativosQuedanEnCero() {
+        assertEquals(0, ServiciosPunto.desdeTexto("AGUA;VOLUNTARIOS=muchos").getVoluntariosNecesarios());
+        assertEquals(0, ServiciosPunto.desdeTexto("AGUA;VOLUNTARIOS=-4").getVoluntariosNecesarios());
+    }
+
 }
