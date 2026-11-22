@@ -13,4 +13,12 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class ServiciosPuntoTest {
     
+    @Test
+    public void testDesdeTextoLeeServiciosYVoluntarios() {
+        ServiciosPunto s = ServiciosPunto.desdeTexto("AGUA,INTERNET,ALIMENTACION;VOLUNTARIOS=5");
+
+        assertEquals(List.of("AGUA", "INTERNET", "ALIMENTACION"), s.getServicios());
+        assertEquals(5, s.getVoluntariosNecesarios());
+    }
+
 }
