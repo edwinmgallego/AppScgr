@@ -17,8 +17,8 @@ import javax.swing.table.DefaultTableModel;
 
 /*
  * PROPOSITO GENERAL: Vista principal del Equipo 5 (RF-06 y RF-08).
- * Agrega en la pestana 1 el formulario de reporte de agua, energia y telecomunicaciones,
- * junto con el buscador y tabla de resultados por barrio (RF-06).
+ * Incorpora en la pestana 2 el formulario de reporte de perdida de senal celular
+ * en coordenadas geograficas especificas (RF-08).
  */
 public class ServiciosPanelView extends JPanel {
 
@@ -37,6 +37,17 @@ public class ServiciosPanelView extends JPanel {
     private JTable tablaServiciosBarrio;
     private DefaultTableModel modeloTablaServicios;
 
+    // Componentes Pestaña 2 (RF-08)
+    private JTextField txtBarrioMovil;
+    private JComboBox<String> cmbOperadorMovil;
+    private JComboBox<String> cmbNivelFallaMovil;
+    private JTextField txtLatitudMovil;
+    private JTextField txtLongitudMovil;
+    private JTextField txtObservacionesMovil;
+    private JButton btnGuardarMovil;
+    private JTable tablaCoberturaMovil;
+    private DefaultTableModel modeloTablaMovil;
+
     public ServiciosPanelView() {
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -47,7 +58,7 @@ public class ServiciosPanelView extends JPanel {
 
         pestanasModulo = new JTabbedPane();
         inicializarPestanaServicios();
-        panelCoberturaMovil = new JPanel(new BorderLayout(10, 10));
+        inicializarPestanaCoberturaMovil();
 
         pestanasModulo.addTab("Servicios por Barrio (RF-06)", panelServiciosBarrio);
         pestanasModulo.addTab("Cobertura Móvil GPS (RF-08)", panelCoberturaMovil);
@@ -99,6 +110,47 @@ public class ServiciosPanelView extends JPanel {
 
         panelServiciosBarrio.add(panelFormulario, BorderLayout.NORTH);
         panelServiciosBarrio.add(panelCentro, BorderLayout.CENTER);
+    }
+
+    private void inicializarPestanaCoberturaMovil() {
+        panelCoberturaMovil = new JPanel(new BorderLayout(10, 10));
+        panelCoberturaMovil.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JPanel panelFormulario = new JPanel(new GridLayout(7, 2, 8, 8));
+        panelFormulario.setBorder(BorderFactory.createTitledBorder("Reportar Falta de Cobertura Móvil en Coordenadas"));
+
+        txtBarrioMovil = new JTextField();
+        cmbOperadorMovil = new JComboBox<>(new String[]{"Claro", "Movistar", "Tigo", "WOM"});
+        cmbNivelFallaMovil = new JComboBox<>(new String[]{"SIN_SENAL", "INTERMITENTE"});
+        txtLatitudMovil = new JTextField("3.4516");
+        txtLongitudMovil = new JTextField("-76.5320");
+        txtObservacionesMovil = new JTextField();
+        btnGuardarMovil = new JButton("Reportar Falla de Señal");
+
+        panelFormulario.add(new JLabel("Barrio / Sector:"));
+        panelFormulario.add(txtBarrioMovil);
+        panelFormulario.add(new JLabel("Operador Móvil:"));
+        panelFormulario.add(cmbOperadorMovil);
+        panelFormulario.add(new JLabel("Nivel de Falla:"));
+        panelFormulario.add(cmbNivelFallaMovil);
+        panelFormulario.add(new JLabel("Latitud GPS:"));
+        panelFormulario.add(txtLatitudMovil);
+        panelFormulario.add(new JLabel("Longitud GPS:"));
+        panelFormulario.add(txtLongitudMovil);
+        panelFormulario.add(new JLabel("Observaciones:"));
+        panelFormulario.add(txtObservacionesMovil);
+        panelFormulario.add(new JLabel(""));
+        panelFormulario.add(btnGuardarMovil);
+
+        String[] columnas = {"ID", "Descripción / Operador", "Latitud", "Longitud", "Votos", "Fecha"};
+        modeloTablaMovil = new DefaultTableModel(columnas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        tablaCoberturaMovil = new JTable(modeloTablaMovil);
+
+        panelCoberturaMovil.add(panelFormulario, BorderLayout.NORTH);
+        panelCoberturaMovil.add(new JScrollPane(tablaCoberturaMovil), BorderLayout.CENTER);
     }
 
     public JTabbedPane getPestanasModulo() { return pestanasModulo; }
