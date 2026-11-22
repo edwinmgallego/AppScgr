@@ -19,9 +19,12 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 /*
- * PROPOSITO GENERAL: Vista principal del Equipo 5 (RF-06 y RF-08).
- * Incorpora un renderizador de celdas (semaforo visual) para resaltar en rojo
- * los servicios caidos, en amarillo las fallas parciales y en verde los operativos.
+ * PROPOSITO GENERAL: Vista principal del Equipo 5 (RF-06 y RF-08) construida como JPanel
+ * para integrarse dentro del Dashboard lateral del Equipo 9 sin abrir ventanas externas.
+ *
+ * ELEMENTOS CLAVE PARA SUSTENTACION:
+ * - Arquitectura MVC estricta: La vista solo captura entradas del usuario y expone Getters
+ *   y metodos de limpieza para que ServiciosController gestione los eventos y llame al DAO.
  */
 public class ServiciosPanelView extends JPanel {
 
@@ -178,5 +181,37 @@ public class ServiciosPanelView extends JPanel {
         panelCoberturaMovil.add(new JScrollPane(tablaCoberturaMovil), BorderLayout.CENTER);
     }
 
+    public void limpiarFormularioServicios() {
+        txtBarrioServicio.setText("");
+        txtObservacionesServicio.setText("");
+        cmbTipoServicio.setSelectedIndex(0);
+        cmbEstadoServicio.setSelectedIndex(0);
+    }
+
+    public void limpiarFormularioMovil() {
+        txtBarrioMovil.setText("");
+        txtObservacionesMovil.setText("");
+        cmbOperadorMovil.setSelectedIndex(0);
+        cmbNivelFallaMovil.setSelectedIndex(0);
+    }
+
+    // --- GETTERS PARA EL CONTROLADOR (MVC) ---
     public JTabbedPane getPestanasModulo() { return pestanasModulo; }
+    public JTextField getTxtBarrioServicio() { return txtBarrioServicio; }
+    public JComboBox<String> getCmbTipoServicio() { return cmbTipoServicio; }
+    public JComboBox<String> getCmbEstadoServicio() { return cmbEstadoServicio; }
+    public JTextField getTxtObservacionesServicio() { return txtObservacionesServicio; }
+    public JButton getBtnGuardarServicio() { return btnGuardarServicio; }
+    public JTextField getTxtBuscarBarrio() { return txtBuscarBarrio; }
+    public JButton getBtnBuscarBarrio() { return btnBuscarBarrio; }
+    public DefaultTableModel getModeloTablaServicios() { return modeloTablaServicios; }
+
+    public JTextField getTxtBarrioMovil() { return txtBarrioMovil; }
+    public JComboBox<String> getCmbOperadorMovil() { return cmbOperadorMovil; }
+    public JComboBox<String> getCmbNivelFallaMovil() { return cmbNivelFallaMovil; }
+    public JTextField getTxtLatitudMovil() { return txtLatitudMovil; }
+    public JTextField getTxtLongitudMovil() { return txtLongitudMovil; }
+    public JTextField getTxtObservacionesMovil() { return txtObservacionesMovil; }
+    public JButton getBtnGuardarMovil() { return btnGuardarMovil; }
+    public DefaultTableModel getModeloTablaMovil() { return modeloTablaMovil; }
 }
