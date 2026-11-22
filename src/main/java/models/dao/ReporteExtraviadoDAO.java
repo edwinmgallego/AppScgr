@@ -284,6 +284,7 @@ public class ReporteExtraviadoDAO extends BaseDAO {
     }
 
     // "Perro CAFÉ, collar rojo" -> {perro, cafe, collar, rojo}
+    // "perro negro sin collar"  -> {perro, negro, sin_collar}   ("sin collar" es lo CONTRARIO de "collar")
     // Quita tildes, pasa a minúsculas, separa por cualquier signo y descarta palabras cortas o vacías
     private Set<String> palabrasClave(String texto) {
         Set<String> palabras = new HashSet<>();
@@ -293,10 +294,17 @@ public class ReporteExtraviadoDAO extends BaseDAO {
         String limpio = Normalizer.normalize(texto, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "")          // quita las tildes (á -> a)
                 .toLowerCase(Locale.ROOT);
+
+        boolean negar = false;   // true si la palabra anterior fue "sin"
         for (String palabra : limpio.split("[^a-z0-9]+")) {
-            if (palabra.length() >= 3 && !PALABRAS_VACIAS.contains(palabra)) {
-                palabras.add(palabra);
+            if (palabra.equals("sin")) {
+                negar = true;
+                continue;
             }
+            if (palabra.length() >= 3 && !PALABRAS_VACIAS.contains(palabra)) {
+                palabras.add(negar ? "sin_" + palabra : palabra);
+            }
+            negar = false;
         }
         return palabras;
     }
