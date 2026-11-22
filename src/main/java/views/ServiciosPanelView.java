@@ -1,6 +1,8 @@
 package views;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -13,12 +15,13 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 /*
  * PROPOSITO GENERAL: Vista principal del Equipo 5 (RF-06 y RF-08).
- * Incorpora en la pestana 2 el formulario de reporte de perdida de senal celular
- * en coordenadas geograficas especificas (RF-08).
+ * Incorpora un renderizador de celdas (semaforo visual) para resaltar en rojo
+ * los servicios caidos, en amarillo las fallas parciales y en verde los operativos.
  */
 public class ServiciosPanelView extends JPanel {
 
@@ -104,12 +107,34 @@ public class ServiciosPanelView extends JPanel {
             public boolean isCellEditable(int row, int column) { return false; }
         };
         tablaServiciosBarrio = new JTable(modeloTablaServicios);
+        aplicarSemaforoEstado(tablaServiciosBarrio);
 
         panelCentro.add(panelFiltro, BorderLayout.NORTH);
         panelCentro.add(new JScrollPane(tablaServiciosBarrio), BorderLayout.CENTER);
 
         panelServiciosBarrio.add(panelFormulario, BorderLayout.NORTH);
         panelServiciosBarrio.add(panelCentro, BorderLayout.CENTER);
+    }
+
+    private void aplicarSemaforoEstado(JTable tabla) {
+        tabla.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                String estado = value != null ? value.toString() : "";
+                if ("CAIDO".equalsIgnoreCase(estado)) {
+                    c.setBackground(new Color(255, 204, 204));
+                    c.setForeground(new Color(153, 0, 0));
+                } else if ("CON_FALLAS".equalsIgnoreCase(estado)) {
+                    c.setBackground(new Color(255, 243, 205));
+                    c.setForeground(new Color(133, 100, 4));
+                } else {
+                    c.setBackground(new Color(212, 237, 218));
+                    c.setForeground(new Color(21, 87, 36));
+                }
+                return c;
+            }
+        });
     }
 
     private void inicializarPestanaCoberturaMovil() {
