@@ -4,6 +4,7 @@ package views;
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 
 public class PuntoAsistenciaView extends JDialog {
 
@@ -84,6 +85,32 @@ public class PuntoAsistenciaView extends JDialog {
         };
 
         tblPuntos = new JTable(modeloPuntos);
+        modeloPuntos.addRow(new Object[]{1, "ALBERGUE", "Prueba 1", "3.4", "-76.5", "ABIERTO", "Agua", 2});
+        modeloPuntos.addRow(new Object[]{2, "HOSPITAL", "Prueba 2", "3.5", "-76.6", "CERRADO", "Internet", 0});
+            tblPuntos.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+        @Override
+        public Component getTableCellRendererComponent(
+                JTable tabla, Object valor, boolean seleccionado,
+                boolean enfocado, int fila, int columna) {
+
+            Component componente = super.getTableCellRendererComponent(
+                    tabla, valor, seleccionado, enfocado, fila, columna);
+
+            int columnaEstado = 4;
+
+            if (!seleccionado && columna == columnaEstado) {
+                if ("ABIERTO".equals(valor)) {
+                    componente.setForeground(new Color(0, 128, 0));
+                } else if ("CERRADO".equals(valor)) {
+                    componente.setForeground(Color.RED);
+                } else {
+                    componente.setForeground(Color.BLACK);
+                }
+            }
+
+            return componente;
+        }
+    });
         tblPuntos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblPuntos.removeColumn(tblPuntos.getColumnModel().getColumn(0));
 
