@@ -15,6 +15,7 @@ import models.Incidente;
 import models.MarcadorMapa;
 import models.TipoMarcador;
 import models.dao.IncidenteDAO;
+import views.EstadoView;
 import views.FamiliaresView;
 import views.LoginView;
 import views.MapaView;
@@ -43,6 +44,7 @@ public class MapaController {
     private final List<MarcadorMapa> marcadoresIncidentes = new ArrayList<>();
     private MarcadorMapa puntoSeleccionado;
     private final List<SeleccionListener> oyentesSeleccion = new ArrayList<>();
+    private EstadoController estadoController; // Equipo 2: se crea la primera vez que se abre
 
     public MapaController(MapaView vista) {
         this.vista = vista;
@@ -94,7 +96,7 @@ public class MapaController {
                     limpiarFormulario();
                     cargarIncidentesEnMapa(); // Refrescar los pines
                 } else {
-                    JOptionPane.showMessageDialog(vista, "Error al guardar en la base de datos.", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(vista, "Error al guardar en la base de datos. ", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -104,6 +106,15 @@ public class MapaController {
 
         // EVENTO 4: Abrir la red familiar (Equipo 1)
         vista.getItemRedFamiliar().addActionListener(e -> new FamiliaresController(new FamiliaresView(vista)).iniciar());
+
+        // EVENTO 4.2 (Equipo 2): reportar mi estado de supervivencia.
+        // Se crea una sola vez para que la cola de mensajes pendientes se conserve mientras el mapa esté abierto.
+        vista.getItemEstado().addActionListener(e -> {
+            if (estadoController == null) {
+                estadoController = new EstadoController(new EstadoView(), this::ubicacionSeleccionada);
+            }
+            estadoController.iniciar();
+        });
 
         // EVENTO 4.1: Abrir mi perfil (editar datos y cambiar contraseña)
         vista.getItemPerfil().addActionListener(e -> new PerfilController(new PerfilView(vista)).iniciar());
@@ -119,6 +130,20 @@ public class MapaController {
             vista.dispose();
             new LoginController(new LoginView()).iniciar();
         });}
+    // Equipo 2: coordenadas que el usuario marcó con clic en el mapa (null si todavía no hizo clic)
+    private double[] ubicacionSeleccionada() {
+        try {
+            String lat = vista.getTxtLatitud().getText().trim();
+            String lon = vista.getTxtLongitud().getText().trim();
+            if (lat.isEmpty() || lon.isEmpty()) {
+                return null;
+            }
+            return new double[]{Double.parseDouble(lat), Double.parseDouble(lon)};
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     // Método READ: Pinta en el mapa los incidentes de la BD, cada tipo con su color
     private void cargarIncidentesEnMapa() {
         marcadoresIncidentes.clear();
