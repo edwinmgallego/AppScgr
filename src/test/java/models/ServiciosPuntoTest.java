@@ -80,4 +80,34 @@ public class ServiciosPuntoTest {
         assertThrows(IllegalArgumentException.class, () -> s.agregar("AGUA,INTERNET"));
         assertThrows(IllegalArgumentException.class, () -> s.agregar("A;B"));
     }
+
+        @Test
+        public void testAgregarYQuitar() {
+        ServiciosPunto s = new ServiciosPunto();
+
+        assertTrue(s.agregar("agua"));
+        assertFalse(s.agregar("AGUA"), "No debe duplicar un servicio.");
+        assertTrue(s.quitar("Agua"));
+        assertFalse(s.quitar("agua"));
+        assertTrue(s.getServicios().isEmpty());
+    }
+
+    @Test
+    public void testVoluntariosNegativosSeRechazan() {
+        ServiciosPunto s = new ServiciosPunto();
+
+        assertThrows(IllegalArgumentException.class, () -> s.setVoluntariosNecesarios(-1));
+    }
+
+    @Test
+    public void testLimiteDeLaColumna() {
+        ServiciosPunto s = new ServiciosPunto();
+        assertTrue(s.cabeEnColumna());
+
+        for (int i = 0; i < 40; i++) {
+            s.agregar("SERVICIO_" + i);
+        }
+        assertFalse(s.cabeEnColumna(), "Más de 255 caracteres no caben en servicios_disponibles.");
+    }
+
 }
