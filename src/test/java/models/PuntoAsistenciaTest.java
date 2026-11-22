@@ -60,5 +60,75 @@ public class PuntoAsistenciaTest {
                 () -> new Albergue("x".repeat(PuntoAsistencia.MAX_NOMBRE + 1), 3.4, -76.5));
         assertEquals("Colegio", new Albergue("  Colegio  ", 3.4, -76.5).getNombre());
     }
+    @Test
+    public void testValidacionesDeCoordenadas() {
+        assertThrows(IllegalArgumentException.class, () -> new Albergue("A", 91, -76.5));
+        assertThrows(IllegalArgumentException.class, () -> new Albergue("A", -91, -76.5));
+        assertThrows(IllegalArgumentException.class, () -> new Albergue("A", 3.4, 181));
+        assertThrows(IllegalArgumentException.class, () -> new Albergue("A", Double.NaN, -76.5));
+    }
 
+    @Test
+    public void testEstadoYServiciosSonObligatorios() {
+        PuntoAsistencia punto = new Mecanico("Taller", 3.4, -76.5);
+
+        assertThrows(IllegalArgumentException.class, () -> punto.setEstado(null));
+        assertThrows(IllegalArgumentException.class, () -> punto.setServicios(null));
+        punto.setEstado(EstadoPunto.CERRADO);
+        assertFalse(punto.isAbierto());
+    }
+
+    @Test
+    public void testCentroAcopioSiempreLlevaLaMarcaAcopio() {
+        CentroAcopio centro = new CentroAcopio("Acopio Norte", 3.4, -76.5);
+        assertTrue(centro.getServicios().contiene(ServiciosPunto.ACOPIO));
+
+        // aunque se reemplacen los servicios (por ejemplo desde un formulario)
+        centro.setServicios(new ServiciosPunto());
+        assertTrue(centro.getServicios().contiene(ServiciosPunto.ACOPIO));
+    }
+
+    @Test
+    public void testCrearElijeLaSubclaseSegunElTipoDeLaBD() {
+        PuntoAsistencia albergue = PuntoAsistencia.crear("ALBERGUE", 1, "A", 3.4, -76.5,
+                EstadoPunto.ABIERTO, new ServiciosPunto());
+        PuntoAsistencia supermercado = PuntoAsistencia.crear("supermercado", 2, "S", 3.4, -76.5,
+                EstadoPunto.CERRADO, null);
+        PuntoAsistencia mecanico = PuntoAsistencia.crear("MECANICO", 3, "M", 3.4, -76.5,
+                EstadoPunto.ABIERTO, null);
+        PuntoAsistencia hospital = PuntoAsistencia.crear("HOSPITAL", 4, "H", 3.4, -76.5,
+                EstadoPunto.ABIERTO, null);
+
+        assertInstanceOf(Albergue.class, albergue);
+        assertInstanceOf(Supermercado.class, supermercado);
+        assertInstanceOf(Mecanico.class, mecanico);
+        assertInstanceOf(Hospital.class, hospital);
+        assertEquals(1, albergue.getId());
+        assertEquals(EstadoPunto.CERRADO, supermercado.getEstado());
+    }
+
+    @Test
+    public void testCrearReconoceUnCentroDeAcopioPorSuMarca() {
+        PuntoAsistencia punto = PuntoAsistencia.crear("ALBERGUE", 5, "Acopio", 3.4, -76.5,
+                EstadoPunto.ABIERTO, ServiciosPunto.desdeTexto("ACOPIO,AGUA;VOLUNTARIOS=4"));
+
+        assertInstanceOf(CentroAcopio.class, punto);
+        assertEquals(4, punto.getVoluntariosNecesarios());
+    }
+
+    @Test
+    public void testCrearRechazaTiposDesconocidos() {
+        assertThrows(IllegalArgumentException.class,
+                () -> PuntoAsistencia.crear("FARMACIA", 1, "F", 3.4, -76.5, EstadoPunto.ABIERTO, null));
+        assertThrows(IllegalArgumentException.class,
+                () -> PuntoAsistencia.crear(null, 1, "F", 3.4, -76.5, EstadoPunto.ABIERTO, null));
+    }
+
+    @Test
+    public void testEstadoDesdeTexto() {
+        assertEquals(EstadoPunto.ABIERTO, EstadoPunto.desdeTexto(null));
+        assertEquals(EstadoPunto.CERRADO, EstadoPunto.desdeTexto("cerrado"));
+        assertThrows(IllegalArgumentException.class, () -> EstadoPunto.desdeTexto("OTRO"));
+    }
 }
+
