@@ -33,7 +33,7 @@ public class CoberturaMovilDAO {
                 reporte.getNivelFalla(),
                 reporte.getObservaciones() != null ? reporte.getObservaciones() : "");
 
-        try (Connection conn = ConexionDB.getConnection();
+        try (Connection conn = ConexionDB.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, reporte.getUsuarioId());
@@ -52,7 +52,7 @@ public class CoberturaMovilDAO {
         List<ReporteCoberturaMovil> lista = new ArrayList<>();
         String sql = "SELECT * FROM reportes_incidentes WHERE tipo_incidente = 'SIN_SENAL' AND estado = 'ACTIVO' ORDER BY fecha_reporte DESC";
 
-        try (Connection conn = ConexionDB.getConnection();
+        try (Connection conn = ConexionDB.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
@@ -72,7 +72,7 @@ public class CoberturaMovilDAO {
         List<ReporteCoberturaMovil> lista = new ArrayList<>();
         String sql = "SELECT * FROM reportes_incidentes WHERE tipo_incidente = 'SIN_SENAL' AND descripcion LIKE ? ORDER BY fecha_reporte DESC";
 
-        try (Connection conn = ConexionDB.getConnection();
+        try (Connection conn = ConexionDB.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, "%" + criterio.trim() + "%");
@@ -90,7 +90,7 @@ public class CoberturaMovilDAO {
     public boolean marcarSenalRestablecida(int idReporte) {
         String sql = "UPDATE reportes_incidentes SET estado = 'RESUELTO' WHERE id = ? AND tipo_incidente = 'SIN_SENAL'";
 
-        try (Connection conn = ConexionDB.getConnection();
+        try (Connection conn = ConexionDB.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idReporte);
@@ -104,7 +104,7 @@ public class CoberturaMovilDAO {
     public boolean eliminarReporteCobertura(int idReporte) {
         String sql = "DELETE FROM reportes_incidentes WHERE id = ? AND tipo_incidente = 'SIN_SENAL'";
 
-        try (Connection conn = ConexionDB.getConnection();
+        try (Connection conn = ConexionDB.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, idReporte);
