@@ -16,7 +16,7 @@ import models.TipoReporte;
  * DAO del tablón de personas y mascotas extraviadas (RF-11 y RF-12).
  * Trabaja sobre la tabla original `reportes_extraviados` (la base de datos no se modifica).
  *
- * @author Santiago Sepulveda - Equipo 8
+ * @author User
  */
 public class ReporteExtraviadoDAO extends BaseDAO {
 
@@ -102,6 +102,49 @@ public class ReporteExtraviadoDAO extends BaseDAO {
             System.err.println("Error DAO al obtener el reporte extraviado: " + e.getMessage());
         }
         return null;
+    }
+
+    // Método UPDATE: actualiza los datos del reporte (ej. pasar de PERDIDO a ENCONTRADO)
+    // No cambia usuario_id ni fecha_reporte: quién lo creó y cuándo no debe cambiar
+    public boolean actualizarReporte(ReporteExtraviado reporte) {
+        if (!sePuedeGuardar(reporte) || reporte.getId() <= 0) {
+            return false;
+        }
+        String sql = "UPDATE reportes_extraviados SET tipo = ?, nombre = ?, caracteristicas = ?, "
+                + "estado = ?, latitud_visto = ?, longitud_visto = ? WHERE id = ?";
+
+        try {
+            Connection conn = conexion();
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                asignarDatos(pstmt, reporte, 1);   // llena los ? del 1 al 6
+                pstmt.setInt(7, reporte.getId());   // el ? del WHERE
+
+                return pstmt.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al actualizar el reporte extraviado: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Método DELETE FÍSICO: borra el reporte de la base de datos
+    public boolean eliminarReporte(int id) {
+        if (id <= 0) {
+            return false;
+        }
+        String sql = "DELETE FROM reportes_extraviados WHERE id = ?";
+
+        try {
+            Connection conn = conexion();
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, id);
+                return pstmt.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al eliminar el reporte extraviado: " + e.getMessage());
+            return false;
+        }
     }
 
     // ----------------- Métodos de apoyo (privados) -----------------
