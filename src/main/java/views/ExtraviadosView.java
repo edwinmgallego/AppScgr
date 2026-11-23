@@ -36,6 +36,7 @@ public class ExtraviadosView extends JPanel {
     private JComboBox<Object> cmbFiltroEstado;
     private JTextField txtFiltroTexto;
     private JButton btnFiltrar;
+    private JButton btnVerTodos;
 
     // Tabla
     private JTable tablaReportes;
@@ -135,6 +136,7 @@ public class ExtraviadosView extends JPanel {
 
         txtFiltroTexto = new JTextField(16);
         btnFiltrar = new JButton("Filtrar");
+        btnVerTodos = new JButton("Ver todos");
 
         panelFiltros.add(new JLabel("Tipo:"));
         panelFiltros.add(cmbFiltroTipo);
@@ -143,6 +145,7 @@ public class ExtraviadosView extends JPanel {
         panelFiltros.add(new JLabel("Buscar:"));
         panelFiltros.add(txtFiltroTexto);
         panelFiltros.add(btnFiltrar);
+        panelFiltros.add(btnVerTodos);
 
         String[] columnas = {"ID", "Tipo", "Nombre", "Estado", "Características", "Latitud", "Longitud", "Fecha"};
         modeloTabla = new DefaultTableModel(columnas, 0) {
@@ -222,7 +225,7 @@ public class ExtraviadosView extends JPanel {
         String caracteristicas = txtCaracteristicas.getText().trim();
 
         if (nombre.isEmpty() || caracteristicas.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Debes ingresar nombre y características.", "Campos requeridos", JOptionPane.WARNING_MESSAGE);
+            mostrarError("Debes ingresar nombre y características.");
             return null;
         }
 
@@ -253,7 +256,7 @@ public class ExtraviadosView extends JPanel {
         try {
             return Double.valueOf(texto.replace(',', '.'));
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "La " + campo + " debe ser un número válido o dejarse vacía.", "Dato inválido", JOptionPane.WARNING_MESSAGE);
+            mostrarError("La " + campo + " debe ser un número válido o dejarse vacía.");
             return null;
         }
     }
@@ -286,6 +289,34 @@ public class ExtraviadosView extends JPanel {
         txtLatitud.setText("");
         txtLongitud.setText("");
         txtCaracteristicas.setText("");
+    }
+
+    public void limpiarFiltros() {
+        cmbFiltroTipo.setSelectedIndex(0);
+        cmbFiltroEstado.setSelectedIndex(0);
+        txtFiltroTexto.setText("");
+    }
+
+    public void mostrarMensaje(String mensaje) {
+        JOptionPane.showMessageDialog(this, mensaje, "Información", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public void mostrarError(String mensaje) {
+        JOptionPane.showMessageDialog(this, mensaje, "Error", JOptionPane.WARNING_MESSAGE);
+    }
+
+    public boolean confirmarEliminacion(String nombreReporte) {
+        String detalle = (nombreReporte == null || nombreReporte.isBlank())
+                ? "este reporte"
+                : "el reporte de \"" + nombreReporte + "\"";
+        int opcion = JOptionPane.showConfirmDialog(
+                this,
+                "¿Seguro que deseas eliminar " + detalle + "?",
+                "Confirmar eliminación",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+        return opcion == JOptionPane.YES_OPTION;
     }
 
     public Integer getIdSeleccionado() {
@@ -329,5 +360,9 @@ public class ExtraviadosView extends JPanel {
 
     public void addFiltrarListener(ActionListener listener) {
         btnFiltrar.addActionListener(listener);
+    }
+
+    public void addVerTodosListener(ActionListener listener) {
+        btnVerTodos.addActionListener(listener);
     }
 }
