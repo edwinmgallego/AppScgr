@@ -24,7 +24,7 @@ public class ReporteExtraviadoDAOTest {
 
     @BeforeEach
     void setUp() {
-        // Antes de cada prueba: DAO nuevo y lista de ids vacía
+        
         dao = new ReporteExtraviadoDAO();
         idsCreados = new ArrayList<>();
     }
