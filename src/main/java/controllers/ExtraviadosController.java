@@ -20,6 +20,10 @@ public class ExtraviadosController {
     private final ExtraviadosView vista;
     private final ReporteExtraviadoDAO dao;
 
+    // Título que tiene la tabla ahora ("Listado de reportes", "Resultados del filtro"...).
+    // Se guarda porque limpiarFormulario() de la vista lo regresa a "Listado de reportes".
+    private String tituloTabla = "Listado de reportes";
+
     public ExtraviadosController(ExtraviadosView vista) {
         this.vista = vista;
         this.dao = new ReporteExtraviadoDAO();
@@ -27,6 +31,9 @@ public class ExtraviadosController {
         vista.addGuardarListener(e -> guardar());
         vista.addActualizarListener(e -> actualizar());
         vista.addEliminarListener(e -> eliminar());
+        vista.addFiltrarListener(e -> filtrar());
+        vista.addVerTodosListener(e -> verTodos());
+        vista.addLimpiarListener(e -> limpiar());
 
         cargarReportes();
     }
@@ -105,14 +112,45 @@ public class ExtraviadosController {
         cargarReportes();
     }
 
-    // Trae todos los reportes de la base de datos y los muestra en la tabla.
-    // También limpia el formulario: al recargar la tabla se pierde la fila seleccionada,
-    // y si el formulario siguiera lleno quedaría apuntando a un reporte que ya no está marcado.
+    // Busca con los filtros de la vista. Si un combo está en "Todos", la vista devuelve null
+    // y el DAO entiende que ese filtro no se aplica. Lo mismo con el texto vacío.
+    private void filtrar() {
+        List<ReporteExtraviado> resultados = dao.buscarPorFiltros(
+                vista.getFiltroTipo(), vista.getFiltroEstado(), vista.getFiltroTexto());
+
+        mostrarEnTabla(resultados, "Resultados del filtro (" + resultados.size() + ")");
+
+        if (resultados.isEmpty()) {
+            vista.mostrarMensaje("No hay reportes que cumplan esos filtros.\n"
+                    + "Usa Ver todos para volver al listado completo.");
+        }
+    }
+
+    // Quita los filtros y vuelve a mostrar todos los reportes
+    private void verTodos() {
+        vista.limpiarFiltros();
+        cargarReportes();
+    }
+
+    // Deja el formulario vacío para escribir un reporte nuevo, sin tocar lo que muestra la tabla
+    private void limpiar() {
+        vista.limpiarFormulario();
+        vista.setTituloTabla(tituloTabla); // limpiarFormulario() cambia el título; se deja el que estaba
+    }
+
+    // Trae todos los reportes de la base de datos y los muestra en la tabla
     private void cargarReportes() {
-        List<ReporteExtraviado> reportes = dao.obtenerTodos();
+        mostrarEnTabla(dao.obtenerTodos(), "Listado de reportes");
+    }
+
+    // Pone una lista en la tabla con su título.
+    // También limpia el formulario: al cambiar la tabla se pierde la fila seleccionada,
+    // y si el formulario siguiera lleno quedaría apuntando a un reporte que ya no está marcado.
+    private void mostrarEnTabla(List<ReporteExtraviado> reportes, String titulo) {
         vista.limpiarFormulario();
         vista.setReportes(reportes);
-        vista.setTituloTabla("Listado de reportes");
+        tituloTabla = titulo;
+        vista.setTituloTabla(titulo);
     }
 
     // Id del usuario que inició sesión. Si nadie ha iniciado sesión (pruebas sin login) se usa el 1
