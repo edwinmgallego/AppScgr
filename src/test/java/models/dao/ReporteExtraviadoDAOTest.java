@@ -272,4 +272,67 @@ public class ReporteExtraviadoDAOTest {
         assertNotNull(resultado);
         assertTrue(resultado.isEmpty(), "El texto se debe tratar como texto, no como SQL");
     }
+        @Test
+    @DisplayName("buscarCoincidencias: encuentra el parecido y descarta el distinto")
+    void buscarCoincidencias() {
+        ReporteExtraviado perdido = registrar(TipoReporte.MASCOTA, EstadoReporte.PERDIDO,
+                "perro criollo cafe, collar rojo");
+        ReporteExtraviado encontradoParecido = registrar(TipoReporte.MASCOTA, EstadoReporte.ENCONTRADO,
+                "Perro criollo de color café con collar rojo");
+        ReporteExtraviado encontradoDistinto = registrar(TipoReporte.MASCOTA, EstadoReporte.ENCONTRADO,
+                "gato siames blanco, ojos azules");
+        ReporteExtraviado otroPerdidoIgual = registrar(TipoReporte.MASCOTA, EstadoReporte.PERDIDO,
+                "perro criollo cafe, collar rojo");
+        ReporteExtraviado personaIgual = registrar(TipoReporte.PERSONA, EstadoReporte.ENCONTRADO,
+                "perro criollo cafe, collar rojo");
+
+        List<ReporteExtraviado> coincidencias = dao.buscarCoincidencias(perdido);
+
+        assertTrue(contieneId(coincidencias, encontradoParecido.getId()), "Debe encontrar el ENCONTRADO parecido");
+        assertFalse(contieneId(coincidencias, encontradoDistinto.getId()), "No debe traer el gato");
+        assertFalse(contieneId(coincidencias, otroPerdidoIgual.getId()), "Solo busca el estado contrario");
+        assertFalse(contieneId(coincidencias, personaIgual.getId()), "Solo busca el mismo tipo");
+        assertFalse(contieneId(coincidencias, perdido.getId()), "No se debe encontrar a sí mismo");
+    }
+
+    @Test
+    @DisplayName("buscarCoincidencias: funciona al revés (de ENCONTRADO a PERDIDO)")
+    void buscarCoincidenciasAlReves() {
+        ReporteExtraviado perdido = registrar(TipoReporte.PERSONA, EstadoReporte.PERDIDO,
+                "niño moreno, chaqueta verde, tenis blancos");
+        ReporteExtraviado encontrado = registrar(TipoReporte.PERSONA, EstadoReporte.ENCONTRADO,
+                "niño moreno con chaqueta verde");
+
+        List<ReporteExtraviado> coincidencias = dao.buscarCoincidencias(encontrado);
+
+        assertTrue(contieneId(coincidencias, perdido.getId()));
+    }
+
+    @Test
+    @DisplayName("buscarCoincidencias: 'sin collar' NO coincide con 'collar'")
+    void buscarCoincidenciasNegacion() {
+        
+        ReporteExtraviado perdido = registrar(TipoReporte.MASCOTA, EstadoReporte.PERDIDO,
+                "tortuga con collar");
+        
+        ReporteExtraviado conCollar = registrar(TipoReporte.MASCOTA, EstadoReporte.ENCONTRADO,
+                "tortuga collar");
+      
+        ReporteExtraviado sinCollar = registrar(TipoReporte.MASCOTA, EstadoReporte.ENCONTRADO,
+                "tortuga sin collar");
+
+        List<ReporteExtraviado> coincidencias = dao.buscarCoincidencias(perdido);
+
+        assertTrue(contieneId(coincidencias, conCollar.getId()), "El control con collar sí debe coincidir");
+        assertFalse(contieneId(coincidencias, sinCollar.getId()), "'sin collar' no debe coincidir con 'collar'");
+    }
+
+    @Test
+    @DisplayName("buscarCoincidencias: con null devuelve lista vacía")
+    void buscarCoincidenciasNull() {
+        List<ReporteExtraviado> coincidencias = dao.buscarCoincidencias(null);
+
+        assertNotNull(coincidencias);
+        assertTrue(coincidencias.isEmpty());
+    }
 }
