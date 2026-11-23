@@ -16,7 +16,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumnModel;
 import models.EstadoReporte;
 import models.ReporteExtraviado;
 import models.TipoReporte;
@@ -41,6 +44,7 @@ public class ExtraviadosView extends JPanel {
     // Tabla
     private JTable tablaReportes;
     private DefaultTableModel modeloTabla;
+    private TitledBorder bordeTabla;
 
     // 5 Botones principales
     private JButton btnGuardar;
@@ -155,8 +159,17 @@ public class ExtraviadosView extends JPanel {
             }
         };
         tablaReportes = new JTable(modeloTabla);
+        tablaReportes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        TableColumnModel columnModel = tablaReportes.getColumnModel();
+        if (columnModel.getColumnCount() > 0) {
+            columnModel.getColumn(0).setPreferredWidth(55);
+            columnModel.getColumn(0).setMaxWidth(75);
+        }
+
         JScrollPane scrollTabla = new JScrollPane(tablaReportes);
-        scrollTabla.setBorder(BorderFactory.createTitledBorder("Listado de reportes"));
+        bordeTabla = BorderFactory.createTitledBorder("Listado de reportes");
+        scrollTabla.setBorder(bordeTabla);
 
         centro.add(panelFiltros, BorderLayout.NORTH);
         centro.add(scrollTabla, BorderLayout.CENTER);
@@ -280,6 +293,13 @@ public class ExtraviadosView extends JPanel {
         }
     }
 
+    public void setTituloTabla(String titulo) {
+        if (bordeTabla != null && titulo != null && !titulo.isBlank()) {
+            bordeTabla.setTitle(titulo);
+            tablaReportes.getParent().getParent().repaint();
+        }
+    }
+
     public void limpiarFormulario() {
         idSeleccionado = null;
         tablaReportes.clearSelection();
@@ -289,6 +309,7 @@ public class ExtraviadosView extends JPanel {
         txtLatitud.setText("");
         txtLongitud.setText("");
         txtCaracteristicas.setText("");
+        setTituloTabla("Listado de reportes");
     }
 
     public void limpiarFiltros() {
