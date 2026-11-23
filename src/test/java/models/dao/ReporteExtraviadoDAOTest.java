@@ -13,19 +13,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Pruebas de integración de ReporteExtraviadoDAO (Grupo 8, RF-11 y RF-12). Usan
- * la base de datos REAL: necesitan XAMPP con MySQL encendido. Cada reporte
- * creado se llama "PRUEBA_..." y se borra en @AfterEach.
- */
+
 public class ReporteExtraviadoDAOTest {
 
     private ReporteExtraviadoDAO dao;
     private List<Integer> idsCreados;
 
-    /**
-     * Usuario de prueba (existe el usuario 1 en la tabla usuarios).
-     */
+  
     private static final int ID_USUARIO = 1;
 
     @BeforeEach
@@ -37,22 +31,18 @@ public class ReporteExtraviadoDAOTest {
 
     @AfterEach
     void tearDown() {
-        // Después de cada prueba (aunque falle): borra lo que se creó
+    
         for (Integer id : idsCreados) {
             dao.eliminarReporte(id);
         }
     }
 
-    /**
-     * Nombre único para no chocar con datos reales.
-     */
+    
     private String nombreUnico() {
         return "PRUEBA_" + System.nanoTime();
     }
 
-    /**
-     * Crea y registra un reporte, verifica que salió bien y guarda su id.
-     */
+ 
     private ReporteExtraviado registrar(TipoReporte tipo, EstadoReporte estado, String caracteristicas) {
         ReporteExtraviado r = new ReporteExtraviado(tipo, nombreUnico(), caracteristicas, estado, null, null);
         assertTrue(dao.registrarReporte(r, ID_USUARIO), "No se pudo registrar el reporte. ¿XAMPP está encendido?");
@@ -60,9 +50,8 @@ public class ReporteExtraviadoDAOTest {
         return r;
     }
 
-    /**
-     * Dice si en la lista hay un reporte con ese id.
-     */
+   
+
     private boolean contieneId(List<ReporteExtraviado> lista, int id) {
         for (ReporteExtraviado r : lista) {
             if (r.getId() == id) {
@@ -132,7 +121,7 @@ public class ReporteExtraviadoDAOTest {
         assertFalse(dao.registrarReporte(nombreLargo, ID_USUARIO), "Nombre de más de 100 caracteres");
         assertFalse(dao.registrarReporte(sinCaracteristicas, ID_USUARIO), "Características vacías");
 
-        // Por si alguno se guardó por error, que @AfterEach lo borre
+        
         for (ReporteExtraviado r : List.of(sinTipo, nombreVacio, nombreLargo, sinCaracteristicas)) {
             if (r.getId() > 0) {
                 idsCreados.add(r.getId());
@@ -183,7 +172,7 @@ public class ReporteExtraviadoDAOTest {
         r.setCaracteristicas("perro beagle con collar azul, encontrado en el parque");
         assertTrue(dao.actualizarReporte(r));
 
-        // Releer de la BD para confirmar que el cambio quedó guardado
+     
         ReporteExtraviado leido = dao.obtenerPorId(r.getId());
         assertEquals(EstadoReporte.ENCONTRADO, leido.getEstado());
         assertEquals("perro beagle con collar azul, encontrado en el parque", leido.getCaracteristicas());
@@ -217,5 +206,70 @@ public class ReporteExtraviadoDAOTest {
         assertFalse(dao.eliminarReporte(Integer.MAX_VALUE));
         assertFalse(dao.eliminarReporte(0));
         assertFalse(dao.eliminarReporte(-5));
+    }
+    
+        @Test
+    @DisplayName("buscarPorFiltros: filtra por tipo y estado")
+    void filtrarPorTipoYEstado() {
+        ReporteExtraviado mascotaPerdida = registrar(TipoReporte.MASCOTA, EstadoReporte.PERDIDO, "hamster dorado");
+        ReporteExtraviado personaEncontrada = registrar(TipoReporte.PERSONA, EstadoReporte.ENCONTRADO, "señor mayor, gorra negra");
+
+        List<ReporteExtraviado> resultado = dao.buscarPorFiltros(TipoReporte.MASCOTA, EstadoReporte.PERDIDO, null);
+
+        assertTrue(contieneId(resultado, mascotaPerdida.getId()));
+        assertFalse(contieneId(resultado, personaEncontrada.getId()));
+        for (ReporteExtraviado r : resultado) {
+            assertEquals(TipoReporte.MASCOTA, r.getTipo());
+            assertEquals(EstadoReporte.PERDIDO, r.getEstado());
+        }
+    }
+
+    @Test
+    @DisplayName("buscarPorFiltros: busca texto en el nombre sin importar mayúsculas")
+    void filtrarPorTexto() {
+        ReporteExtraviado r = registrar(TipoReporte.PERSONA, EstadoReporte.PERDIDO, "joven con camiseta del America");
+
+        List<ReporteExtraviado> resultado = dao.buscarPorFiltros(null, null, r.getNombre().toLowerCase());
+
+        assertTrue(contieneId(resultado, r.getId()));
+    }
+
+    @Test
+    @DisplayName("buscarPorFiltros: busca texto dentro de las características")
+    void filtrarPorTextoEnCaracteristicas() {
+        String palabraRara = "zzmarca" + System.nanoTime();
+        ReporteExtraviado r = registrar(TipoReporte.MASCOTA, EstadoReporte.PERDIDO, "perro con placa " + palabraRara);
+
+        List<ReporteExtraviado> resultado = dao.buscarPorFiltros(null, null, palabraRara);
+
+        assertEquals(1, resultado.size());
+        assertEquals(r.getId(), resultado.get(0).getId());
+    }
+
+    @Test
+    @DisplayName("buscarPorFiltros: con todos los filtros en null devuelve todo (\"Todos\")")
+    void filtrarTodosNull() {
+        ReporteExtraviado r1 = registrar(TipoReporte.MASCOTA, EstadoReporte.PERDIDO, "tortuga pequeña");
+        ReporteExtraviado r2 = registrar(TipoReporte.PERSONA, EstadoReporte.ENCONTRADO, "mujer de gafas");
+
+        List<ReporteExtraviado> resultado = dao.buscarPorFiltros(null, null, null);
+        List<ReporteExtraviado> resultadoTextoVacio = dao.buscarPorFiltros(null, null, "");
+
+        assertTrue(contieneId(resultado, r1.getId()));
+        assertTrue(contieneId(resultado, r2.getId()));
+        assertTrue(contieneId(resultadoTextoVacio, r1.getId()));
+        assertTrue(contieneId(resultadoTextoVacio, r2.getId()));
+    }
+
+    @Test
+    @DisplayName("buscarPorFiltros: no es vulnerable a inyección SQL")
+    void filtrarInyeccionSql() {
+        registrar(TipoReporte.MASCOTA, EstadoReporte.PERDIDO, "perro grande");
+
+    
+        List<ReporteExtraviado> resultado = dao.buscarPorFiltros(null, null, "' OR '1'='1");
+
+        assertNotNull(resultado);
+        assertTrue(resultado.isEmpty(), "El texto se debe tratar como texto, no como SQL");
     }
 }
