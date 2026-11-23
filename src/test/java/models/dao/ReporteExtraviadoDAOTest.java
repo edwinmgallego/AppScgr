@@ -139,4 +139,83 @@ public class ReporteExtraviadoDAOTest {
             }
         }
     }
+
+    @Test
+    @DisplayName("obtenerTodos: nunca es null e incluye el reporte recién creado")
+    void obtenerTodos() {
+        ReporteExtraviado r = registrar(TipoReporte.MASCOTA, EstadoReporte.PERDIDO, "loro verde que habla");
+
+        List<ReporteExtraviado> todos = dao.obtenerTodos();
+
+        assertNotNull(todos);
+        assertTrue(contieneId(todos, r.getId()));
+    }
+
+    @Test
+    @DisplayName("obtenerPorId: devuelve el reporte con los mismos datos")
+    void obtenerPorIdExistente() {
+        ReporteExtraviado r = registrar(TipoReporte.PERSONA, EstadoReporte.PERDIDO, "niña de 8 años, vestido amarillo");
+
+        ReporteExtraviado leido = dao.obtenerPorId(r.getId());
+
+        assertNotNull(leido);
+        assertEquals(r.getId(), leido.getId());
+        assertEquals(TipoReporte.PERSONA, leido.getTipo());
+        assertEquals(r.getNombre(), leido.getNombre());
+        assertEquals("niña de 8 años, vestido amarillo", leido.getCaracteristicas());
+        assertEquals(EstadoReporte.PERDIDO, leido.getEstado());
+        assertNotNull(leido.getFechaReporte(), "MySQL debe poner la fecha automáticamente");
+    }
+
+    @Test
+    @DisplayName("obtenerPorId: devuelve null si el id no existe")
+    void obtenerPorIdInexistente() {
+        assertNull(dao.obtenerPorId(Integer.MAX_VALUE));
+        assertNull(dao.obtenerPorId(-1));
+    }
+
+    @Test
+    @DisplayName("actualizarReporte: pasa de PERDIDO a ENCONTRADO y se guarda")
+    void actualizarPerdidoAEncontrado() {
+        ReporteExtraviado r = registrar(TipoReporte.MASCOTA, EstadoReporte.PERDIDO, "perro beagle con collar azul");
+
+        r.setEstado(EstadoReporte.ENCONTRADO);
+        r.setCaracteristicas("perro beagle con collar azul, encontrado en el parque");
+        assertTrue(dao.actualizarReporte(r));
+
+        // Releer de la BD para confirmar que el cambio quedó guardado
+        ReporteExtraviado leido = dao.obtenerPorId(r.getId());
+        assertEquals(EstadoReporte.ENCONTRADO, leido.getEstado());
+        assertEquals("perro beagle con collar azul, encontrado en el parque", leido.getCaracteristicas());
+        assertEquals(ID_USUARIO, leido.getUsuarioId(), "Actualizar no debe cambiar el usuario");
+    }
+
+    @Test
+    @DisplayName("actualizarReporte: devuelve false con id inválido o inexistente")
+    void actualizarInvalido() {
+        ReporteExtraviado idCero = new ReporteExtraviado(TipoReporte.MASCOTA, nombreUnico(), "algo", EstadoReporte.PERDIDO, null, null);
+
+        ReporteExtraviado inexistente = new ReporteExtraviado(TipoReporte.MASCOTA, nombreUnico(), "algo", EstadoReporte.PERDIDO, null, null);
+        inexistente.setId(Integer.MAX_VALUE);
+
+        assertFalse(dao.actualizarReporte(idCero));
+        assertFalse(dao.actualizarReporte(inexistente));
+    }
+
+    @Test
+    @DisplayName("eliminarReporte: borra el reporte y después ya no se encuentra")
+    void eliminarReporte() {
+        ReporteExtraviado r = registrar(TipoReporte.MASCOTA, EstadoReporte.ENCONTRADO, "conejo blanco");
+
+        assertTrue(dao.eliminarReporte(r.getId()));
+        assertNull(dao.obtenerPorId(r.getId()));
+    }
+
+    @Test
+    @DisplayName("eliminarReporte: devuelve false si el id no existe o es <= 0")
+    void eliminarInexistente() {
+        assertFalse(dao.eliminarReporte(Integer.MAX_VALUE));
+        assertFalse(dao.eliminarReporte(0));
+        assertFalse(dao.eliminarReporte(-5));
+    }
 }
