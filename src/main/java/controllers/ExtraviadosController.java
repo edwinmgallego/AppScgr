@@ -24,12 +24,44 @@ public class ExtraviadosController {
         this.vista = vista;
         this.dao = new ReporteExtraviadoDAO();
 
+        vista.addGuardarListener(e -> guardar());
+
         cargarReportes();
     }
 
-    // Trae todos los reportes de la base de datos y los muestra en la tabla
+    // Registra un reporte nuevo con los datos del formulario
+    private void guardar() {
+        // Si hay una fila seleccionada, el formulario muestra un reporte que ya existe:
+        // guardarlo crearía un duplicado. Para cambiarlo se usa Actualizar.
+        if (vista.getIdSeleccionado() != null) {
+            vista.mostrarError("Tienes un reporte seleccionado de la tabla.\n"
+                    + "Usa Actualizar para modificarlo, o Limpiar para crear uno nuevo.");
+            return;
+        }
+
+        // La vista valida nombre, características y coordenadas.
+        // Si algo está mal, ella misma muestra el error y devuelve null.
+        ReporteExtraviado reporte = vista.construirReporteDesdeFormulario();
+        if (reporte == null) {
+            return;
+        }
+
+        if (dao.registrarReporte(reporte, idUsuarioActual())) {
+            // El DAO le pone al objeto el id que generó MySQL
+            vista.mostrarMensaje("Reporte guardado correctamente (id " + reporte.getId() + ").");
+            cargarReportes();
+        } else {
+            vista.mostrarError("No se pudo guardar el reporte.\n"
+                    + "Revisa que el nombre no pase de 100 caracteres y que XAMPP esté encendido.");
+        }
+    }
+
+    // Trae todos los reportes de la base de datos y los muestra en la tabla.
+    // También limpia el formulario: al recargar la tabla se pierde la fila seleccionada,
+    // y si el formulario siguiera lleno quedaría apuntando a un reporte que ya no está marcado.
     private void cargarReportes() {
         List<ReporteExtraviado> reportes = dao.obtenerTodos();
+        vista.limpiarFormulario();
         vista.setReportes(reportes);
         vista.setTituloTabla("Listado de reportes");
     }
