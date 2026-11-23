@@ -2,6 +2,7 @@ package controllers;
 
 import config.Sesion;
 import java.util.List;
+import models.EstadoReporte;
 import models.ReporteExtraviado;
 import models.Usuario;
 import models.dao.ReporteExtraviadoDAO;
@@ -34,6 +35,7 @@ public class ExtraviadosController {
         vista.addFiltrarListener(e -> filtrar());
         vista.addVerTodosListener(e -> verTodos());
         vista.addLimpiarListener(e -> limpiar());
+        vista.addBuscarCoincidenciasListener(e -> buscarCoincidencias());
 
         cargarReportes();
     }
@@ -136,6 +138,37 @@ public class ExtraviadosController {
     private void limpiar() {
         vista.limpiarFormulario();
         vista.setTituloTabla(tituloTabla); // limpiarFormulario() cambia el título; se deja el que estaba
+    }
+
+    // RF-12: cruza el reporte seleccionado con los del estado contrario.
+    // Si es un PERDIDO, busca ENCONTRADOS parecidos, y al revés.
+    private void buscarCoincidencias() {
+        Integer id = vista.getIdSeleccionado();
+        if (id == null) {
+            vista.mostrarError("Selecciona en la tabla el reporte con el que quieres buscar coincidencias.");
+            return;
+        }
+
+        // Se lee de la BD y no del formulario, para comparar con lo que de verdad está guardado
+        ReporteExtraviado reporte = dao.obtenerPorId(id);
+        if (reporte == null) {
+            vista.mostrarError("Ese reporte ya no existe. Se recargará la tabla.");
+            cargarReportes();
+            return;
+        }
+
+        List<ReporteExtraviado> coincidencias = dao.buscarCoincidencias(reporte);
+        if (coincidencias.isEmpty()) {
+            vista.mostrarMensaje("No se encontraron coincidencias para \"" + reporte.getNombre() + "\".");
+            return;
+        }
+
+        String buscados = (reporte.getEstado() == EstadoReporte.ENCONTRADO) ? "perdidos" : "encontrados";
+        mostrarEnTabla(coincidencias, "Posibles coincidencias de \"" + reporte.getNombre() + "\" ("
+                + coincidencias.size() + " " + buscados + ")");
+        vista.mostrarMensaje("Se encontraron " + coincidencias.size() + " posibles coincidencias, "
+                + "ordenadas de la más parecida a la menos parecida.\n"
+                + "Usa Ver todos para volver al listado completo.");
     }
 
     // Trae todos los reportes de la base de datos y los muestra en la tabla
