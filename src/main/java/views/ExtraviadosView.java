@@ -296,7 +296,11 @@ public class ExtraviadosView extends JPanel {
     public void setTituloTabla(String titulo) {
         if (bordeTabla != null && titulo != null && !titulo.isBlank()) {
             bordeTabla.setTitle(titulo);
-            tablaReportes.getParent().getParent().repaint();
+            if (tablaReportes != null && tablaReportes.getParent() != null && tablaReportes.getParent().getParent() != null) {
+                tablaReportes.getParent().getParent().repaint();
+            } else {
+                repaint();
+            }
         }
     }
 
