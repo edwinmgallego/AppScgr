@@ -25,6 +25,8 @@ public class ExtraviadosController {
         this.dao = new ReporteExtraviadoDAO();
 
         vista.addGuardarListener(e -> guardar());
+        vista.addActualizarListener(e -> actualizar());
+        vista.addEliminarListener(e -> eliminar());
 
         cargarReportes();
     }
@@ -54,6 +56,53 @@ public class ExtraviadosController {
             vista.mostrarError("No se pudo guardar el reporte.\n"
                     + "Revisa que el nombre no pase de 100 caracteres y que XAMPP esté encendido.");
         }
+    }
+
+    // Guarda los cambios del reporte seleccionado (por ejemplo, pasarlo de Perdido a Encontrado)
+    private void actualizar() {
+        if (vista.getIdSeleccionado() == null) {
+            vista.mostrarError("Selecciona en la tabla el reporte que quieres actualizar.");
+            return;
+        }
+
+        // Como hay una fila seleccionada, la vista le pone al reporte el id de esa fila
+        ReporteExtraviado reporte = vista.construirReporteDesdeFormulario();
+        if (reporte == null) {
+            return;
+        }
+
+        if (dao.actualizarReporte(reporte)) {
+            vista.mostrarMensaje("Reporte actualizado correctamente.");
+            cargarReportes();
+        } else {
+            vista.mostrarError("No se pudo actualizar el reporte.\n"
+                    + "Puede que otro usuario lo haya eliminado. Se recargará la tabla.");
+            cargarReportes();
+        }
+    }
+
+    // Elimina el reporte seleccionado, después de pedir confirmación
+    private void eliminar() {
+        Integer id = vista.getIdSeleccionado();
+        if (id == null) {
+            vista.mostrarError("Selecciona en la tabla el reporte que quieres eliminar.");
+            return;
+        }
+
+        // Se busca el reporte en la BD para mostrar su nombre en la confirmación
+        ReporteExtraviado reporte = dao.obtenerPorId(id);
+        String nombre = (reporte != null) ? reporte.getNombre() : null;
+
+        if (!vista.confirmarEliminacion(nombre)) {
+            return; // el usuario dijo que No
+        }
+
+        if (dao.eliminarReporte(id)) {
+            vista.mostrarMensaje("Reporte eliminado correctamente.");
+        } else {
+            vista.mostrarError("No se pudo eliminar el reporte. Puede que ya no exista.");
+        }
+        cargarReportes();
     }
 
     // Trae todos los reportes de la base de datos y los muestra en la tabla.
