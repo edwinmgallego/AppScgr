@@ -1,8 +1,5 @@
 # Equipo 4: Algoritmo de Rutas Alternas (RF-04) - Integración con el código base
 
-Este material se **agrega** al repositorio `AppScgr` (rama `develop`). No modifica ningún archivo
-existente: todo son archivos nuevos, así que no genera conflictos con los otros equipos.
-
 ## Dónde queda cada cosa (convención del repo base)
 
 | Ruta | Contenido | Dueño |
@@ -25,16 +22,6 @@ existente: todo son archivos nuevos, así que no genera conflictos con los otros
 Los incidentes llegan **en memoria** como `List<models.Incidente>` (la que devuelve
 `IncidenteDAO.obtenerTodosLosIncidentes()`). No usamos `MarcadorMapa`: pierde el `id` y agrupa los tipos.
 
-```java
-RutasController rutas = new RutasController(new LectorCSV(), new Dijkstra());
-rutas.cargarDatos("data/nodos.csv", "data/tramos.csv");
-
-List<Incidente> incidentes = new IncidenteDAO().obtenerTodosLosIncidentes();
-ResumenCierres resumen = rutas.aplicarIncidentes(incidentes);      // radio por defecto: 50 m
-
-RutaResultado ruta = rutas.calcularRutaDesdeCoordenadas(latUsuario, lonUsuario, latDestino, lonDestino);
-// ruta.getCamino() -> List<Nodo> ordenada con latitud/longitud, lista para dibujar en el mapa
-```
 
 `RutasController` no abre la base de datos ni usa Swing: así se prueba sin MySQL.
 
@@ -52,7 +39,7 @@ RutaResultado ruta = rutas.calcularRutaDesdeCoordenadas(latUsuario, lonUsuario, 
 6. Los incidentes **no tienen estado** (abierto/resuelto) en el esquema actual: todos los registros de la
    tabla se consideran vigentes. Si se quiere "reabrir" una vía, hay que agregar esa columna (acordar con el Equipo 3).
 
-## Contrato nuevo para el Miembro 1
+
 
 `Grafo.getTodasLasAristas()`: devuelve todas las aristas, **también las bloqueadas**. Lo necesita
 `ReglasCierre` para que un incidente sobre una vía ya cerrada no cierre por error una vía vecina.
