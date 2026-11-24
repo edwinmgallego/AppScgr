@@ -46,6 +46,15 @@ public class RutasController {
         this.grafo = repositorio.cargar(rutaNodos, rutaTramos);
     }
 
+    /**
+     * Usa un grafo ya construido (por ejemplo la red vial real de OpenStreetMap, ver {@code rutas.osm})
+     * en lugar de leer los CSV. Reemplaza el grafo actual.
+     */
+    public void cargarGrafo(Grafo grafo) {
+        if (grafo == null) throw new IllegalArgumentException("El grafo no puede ser null");
+        this.grafo = grafo;
+    }
+
     /** Aplica los cierres viales de un CSV sobre el grafo ya cargado. */
     public void aplicarCierres(String rutaCierres) throws IOException {
         repositorio.aplicarCierres(exigirGrafo(), rutaCierres);
