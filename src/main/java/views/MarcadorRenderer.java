@@ -52,6 +52,9 @@ public class MarcadorRenderer implements WaypointRenderer<MarcadorWaypoint> {
             case VIA_ABIERTA -> new Color(40, 167, 69);
             case DERRUMBE -> new Color(230, 126, 34);
             case ESTACION_MIO -> new Color(0, 114, 188);
+            case FALLA_SERVICIO -> new Color(212, 160, 23);
+            case SIN_SENAL -> new Color(111, 66, 193);
+            case DANO_ESTRUCTURAL -> new Color(121, 85, 61);
             case SELECCION -> new Color(200, 0, 120);
             default -> new Color(110, 110, 110);
         };
