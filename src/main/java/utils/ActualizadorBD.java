@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package utils;
 
 import config.ConexionDB;
@@ -16,9 +12,14 @@ import java.sql.Statement;
  * @author oriana - Equipo 1 - Autenticación y Red Familiar
  */
 public final class ActualizadorBD {
-     private ActualizadorBD() { }
 
-    /** Devuelve true si la base queda lista (ya estaba actualizada o se actualizó ahora). */
+    private ActualizadorBD() {
+    }
+
+    /**
+     * Devuelve true si la base queda lista (ya estaba actualizada o se
+     * actualizó ahora).
+     */
     public static boolean actualizar() {
         Connection con = ConexionDB.getInstance().getConnection();
         if (con == null) {
@@ -37,6 +38,12 @@ public final class ActualizadorBD {
                 st.executeUpdate("ALTER TABLE familiares ADD COLUMN es_principal TINYINT(1) NOT NULL DEFAULT 0");
                 System.out.println("Base de datos actualizada: se agregó familiares.es_principal");
             }
+            // Grupo 9 (RF-13): origen del reporte para diferenciar información oficial de la ciudadana.
+            if (!existeColumna(con, "reportes_incidentes", "origen_reporte")) {
+                st.executeUpdate("ALTER TABLE reportes_incidentes "
+                        + "ADD COLUMN origen_reporte VARCHAR(20) NOT NULL DEFAULT 'CIUDADANO'");
+                System.out.println("Base de datos actualizada: se agregó reportes_incidentes.origen_reporte");
+            }
             return true;
         } catch (SQLException e) {
             System.err.println("No se pudo actualizar la base de datos: " + e.getMessage());
@@ -51,5 +58,5 @@ public final class ActualizadorBD {
             return rs.next(); // true si encontró la columna
         }
     }
-    
+
 }
