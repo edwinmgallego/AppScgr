@@ -1,16 +1,9 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package views;
 
 /**
  *
  * @author inged
  */
-
-
-
 import config.ConfiguracionMapa;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.OSMTileFactoryInfo;
@@ -19,11 +12,11 @@ import org.jxmapviewer.input.ZoomMouseWheelListenerCursor;
 import org.jxmapviewer.viewer.DefaultTileFactory;
 import org.jxmapviewer.viewer.GeoPosition;
 import org.jxmapviewer.viewer.TileFactoryInfo;
-
 import javax.swing.*;
 import java.awt.*;
 
 public class MapaView extends JFrame {
+
     private JXMapViewer mapViewer;
     private JComboBox<String> cbxTipoIncidente;
     private JTextArea txtDescripcion;
@@ -31,8 +24,6 @@ public class MapaView extends JFrame {
     private JTextField txtLongitud;
     private JButton btnGuardar;
     private JButton btnLimpiar;
-    private JButton btnActualizar;
-    private JButton btnEliminar;
     private JMenuItem itemRedFamiliar;
     private JMenuItem itemEstado; // Equipo 2: reportar estado de supervivencia
     private JMenuItem itemPerfil;
@@ -73,39 +64,43 @@ public class MapaView extends JFrame {
         gbc.gridx = 0;
 
         // Tipo de Incidente
-        gbc.gridy = 0; panelCrud.add(new JLabel("Tipo de Incidente:"), gbc);
+        gbc.gridy = 0;
+        panelCrud.add(new JLabel("Tipo de Incidente:"), gbc);
         cbxTipoIncidente = new JComboBox<>(new String[]{"VIA_CERRADA", "DERRUMBE", "FALLA_SERVICIO", "SIN_SENAL", "DANO_ESTRUCTURAL"});
-        gbc.gridy = 1; panelCrud.add(cbxTipoIncidente, gbc);
+        gbc.gridy = 1;
+        panelCrud.add(cbxTipoIncidente, gbc);
 
         // Coordenadas (Capturadas por el mapa)
-        gbc.gridy = 2; panelCrud.add(new JLabel("Latitud (Clic en el mapa):"), gbc);
-        txtLatitud = new JTextField(); txtLatitud.setEditable(false);
-        gbc.gridy = 3; panelCrud.add(txtLatitud, gbc);
+        gbc.gridy = 2;
+        panelCrud.add(new JLabel("Latitud (Clic en el mapa):"), gbc);
+        txtLatitud = new JTextField();
+        txtLatitud.setEditable(false);
+        gbc.gridy = 3;
+        panelCrud.add(txtLatitud, gbc);
 
-        gbc.gridy = 4; panelCrud.add(new JLabel("Longitud (Clic en el mapa):"), gbc);
-        txtLongitud = new JTextField(); txtLongitud.setEditable(false);
-        gbc.gridy = 5; panelCrud.add(txtLongitud, gbc);
+        gbc.gridy = 4;
+        panelCrud.add(new JLabel("Longitud (Clic en el mapa):"), gbc);
+        txtLongitud = new JTextField();
+        txtLongitud.setEditable(false);
+        gbc.gridy = 5;
+        panelCrud.add(txtLongitud, gbc);
 
         // Descripción
-        gbc.gridy = 6; panelCrud.add(new JLabel("Descripción:"), gbc);
+        gbc.gridy = 6;
+        panelCrud.add(new JLabel("Descripción:"), gbc);
         txtDescripcion = new JTextArea(4, 20);
         txtDescripcion.setLineWrap(true);
-        gbc.gridy = 7; panelCrud.add(new JScrollPane(txtDescripcion), gbc);
+        gbc.gridy = 7;
+        panelCrud.add(new JScrollPane(txtDescripcion), gbc);
 
         // Botones
-        JPanel panelBotones = new JPanel(new GridLayout(2, 2, 5, 5));
+        JPanel panelBotones = new JPanel(new GridLayout(1, 2, 5, 5));
         btnGuardar = new JButton("Guardar");
         btnLimpiar = new JButton("Limpiar");
-        btnActualizar = new JButton("Actualizar");
-        btnEliminar = new JButton("Eliminar");
-        // Apagados hasta que el usuario seleccione un reporte del mapa
-        btnActualizar.setEnabled(false);
-        btnEliminar.setEnabled(false);
         panelBotones.add(btnGuardar);
         panelBotones.add(btnLimpiar);
-        panelBotones.add(btnActualizar);
-        panelBotones.add(btnEliminar);
-        gbc.gridy = 8; panelCrud.add(panelBotones, gbc);
+        gbc.gridy = 8;
+        panelCrud.add(panelBotones, gbc);
 
         // --- MENÚ DE CUENTA (Equipo 1: Autenticación y Red Familiar) ---
         JMenuBar barraMenu = new JMenuBar();
@@ -129,17 +124,47 @@ public class MapaView extends JFrame {
     }
 
     // Getters para que el Controlador pueda acceder a los datos de la vista
-    public JXMapViewer getMapViewer() { return mapViewer; }
-    public JComboBox<String> getCbxTipoIncidente() { return cbxTipoIncidente; }
-    public JTextArea getTxtDescripcion() { return txtDescripcion; }
-    public JTextField getTxtLatitud() { return txtLatitud; }
-    public JTextField getTxtLongitud() { return txtLongitud; }
-    public JButton getBtnGuardar() { return btnGuardar; }
-    public JButton getBtnLimpiar() { return btnLimpiar; }
-    public JButton getBtnActualizar() { return btnActualizar; }
-    public JButton getBtnEliminar() { return btnEliminar; }
-    public JMenuItem getItemRedFamiliar() { return itemRedFamiliar; }
-    public JMenuItem getItemEstado() { return itemEstado; }
-    public JMenuItem getItemPerfil() { return itemPerfil; }
-    public JMenuItem getItemCerrarSesion() { return itemCerrarSesion; }
+    public JXMapViewer getMapViewer() {
+        return mapViewer;
+    }
+
+    public JComboBox<String> getCbxTipoIncidente() {
+        return cbxTipoIncidente;
+    }
+
+    public JTextArea getTxtDescripcion() {
+        return txtDescripcion;
+    }
+
+    public JTextField getTxtLatitud() {
+        return txtLatitud;
+    }
+
+    public JTextField getTxtLongitud() {
+        return txtLongitud;
+    }
+
+    public JButton getBtnGuardar() {
+        return btnGuardar;
+    }
+
+    public JButton getBtnLimpiar() {
+        return btnLimpiar;
+    }
+
+    public JMenuItem getItemRedFamiliar() {
+        return itemRedFamiliar;
+    }
+
+    public JMenuItem getItemEstado() {
+        return itemEstado;
+    }
+
+    public JMenuItem getItemPerfil() {
+        return itemPerfil;
+    }
+
+    public JMenuItem getItemCerrarSesion() {
+        return itemCerrarSesion;
+    }
 }

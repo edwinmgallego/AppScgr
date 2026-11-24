@@ -1,21 +1,15 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package views;
 
+import models.MarcadorMapa;
+import models.TipoMarcador;
+import org.jxmapviewer.JXMapViewer;
+import org.jxmapviewer.viewer.WaypointRenderer;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.Point2D;
-
-import org.jxmapviewer.JXMapViewer;
-import org.jxmapviewer.viewer.WaypointRenderer;
-
-import models.MarcadorMapa;
-import models.TipoMarcador;
 
 /**
  * Dibuja cada marcador con el color de su categoría; el punto seleccionado lleva una mira.
@@ -53,7 +47,6 @@ public class MarcadorRenderer implements WaypointRenderer<MarcadorWaypoint> {
         return switch (tipo) {
             case VIA_CERRADA -> new Color(210, 40, 40);
             case DERRUMBE -> new Color(230, 126, 34);
-            case ESTACION_MIO -> new Color(0, 114, 188);
             case SELECCION -> new Color(200, 0, 120);
             default -> new Color(110, 110, 110);
         };
