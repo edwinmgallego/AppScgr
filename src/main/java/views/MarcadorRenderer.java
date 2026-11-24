@@ -52,6 +52,7 @@ public class MarcadorRenderer implements WaypointRenderer<MarcadorWaypoint> {
             case VIA_ABIERTA -> new Color(40, 167, 69);
             case DERRUMBE -> new Color(230, 126, 34);
             case ESTACION_MIO -> new Color(0, 114, 188);
+            case ESTACION_MIO_NO_OPERATIVA -> new Color(150, 190, 225);
             case FALLA_SERVICIO -> new Color(212, 160, 23);
             case SIN_SENAL -> new Color(111, 66, 193);
             case DANO_ESTRUCTURAL -> new Color(121, 85, 61);
@@ -71,6 +72,12 @@ public class MarcadorRenderer implements WaypointRenderer<MarcadorWaypoint> {
     private void dibujarDetalleVia(Graphics2D g, int x, int y, TipoMarcador tipo) {
         if (tipo == TipoMarcador.VIA_CERRADA) {
             g.setColor(Color.WHITE);
+            g.setStroke(new BasicStroke(2f));
+            g.drawLine(x - 4, y - 4, x + 4, y + 4);
+            g.drawLine(x + 4, y - 4, x - 4, y + 4);
+        } else if (tipo == TipoMarcador.ESTACION_MIO_NO_OPERATIVA) {
+            // Estación fuera de servicio: azul claro con una X azul oscuro
+            g.setColor(new Color(0, 60, 110));
             g.setStroke(new BasicStroke(2f));
             g.drawLine(x - 4, y - 4, x + 4, y + 4);
             g.drawLine(x + 4, y - 4, x - 4, y + 4);
