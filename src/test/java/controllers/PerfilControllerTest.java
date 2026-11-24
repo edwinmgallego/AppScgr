@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Pruebas de las validaciones del perfil (no necesitan base de datos).
  *
- * @author (escribe aquí tu nombre)
+ * @author
  */
 public class PerfilControllerTest {
 
@@ -31,5 +31,32 @@ public class PerfilControllerTest {
     public void testTelefonoInvalido() {
         assertNotNull(PerfilController.validar("Ana Pérez", "abc"));
         assertNotNull(PerfilController.validar("Ana Pérez", "123"), "Muy corto.");
+    }
+
+    @Test
+    public void testPasswordValida() {
+        assertNull(PerfilController.validarPassword("Vieja123!", "Nueva456@", "Nueva456@"));
+    }
+
+    @Test
+    public void testPasswordActualVacia() {
+        assertNotNull(PerfilController.validarPassword("", "Nueva456@", "Nueva456@"));
+    }
+
+    @Test
+    public void testPasswordNuevaDebil() {
+        assertNotNull(PerfilController.validarPassword("Vieja123!", "abc", "abc"), "Muy corta.");
+        assertNotNull(PerfilController.validarPassword("Vieja123!", "nueva456@", "nueva456@"), "Sin mayúscula.");
+        assertNotNull(PerfilController.validarPassword("Vieja123!", "Nueva4567", "Nueva4567"), "Sin carácter especial.");
+    }
+
+    @Test
+    public void testPasswordNoCoincide() {
+        assertNotNull(PerfilController.validarPassword("Vieja123!", "Nueva456@", "Otra456@"));
+    }
+
+    @Test
+    public void testPasswordIgualALaActual() {
+        assertNotNull(PerfilController.validarPassword("Vieja123!", "Vieja123!", "Vieja123!"));
     }
 }

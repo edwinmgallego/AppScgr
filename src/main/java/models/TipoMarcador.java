@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package models;
 
 import java.util.Locale;
@@ -15,7 +11,9 @@ import java.util.Locale;
 public enum TipoMarcador {
 
     VIA_CERRADA("Vía cerrada", true),
+    VIA_ABIERTA("Vía abierta", false),
     DERRUMBE("Derrumbe", true),
+    ESTACION_MIO("Estación MIO", false),
     OTRO("Otro incidente", false),
     SELECCION("Punto seleccionado", false);
 

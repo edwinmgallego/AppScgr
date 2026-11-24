@@ -1,29 +1,26 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controllers;
 
 /**
  *
  * @author inged
  */
-
-
 import config.Sesion;
 import models.Incidente;
 import models.MarcadorMapa;
 import models.TipoMarcador;
 import models.dao.IncidenteDAO;
+import models.EstacionMio;
+import models.EstadoVia;
+import models.dao.EstacionMioDAO;
+import views.EstadoView;
 import views.FamiliaresView;
 import views.LoginView;
 import views.MapaView;
+import views.PerfilView;
 import views.MarcadorRenderer;
 import views.MarcadorWaypoint;
-
 import org.jxmapviewer.viewer.GeoPosition;
 import org.jxmapviewer.viewer.WaypointPainter;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -36,12 +33,16 @@ import java.util.Set;
 import javax.swing.JOptionPane;
 
 public class MapaController {
+
     private MapaView vista;
     private IncidenteDAO incidenteDAO;
     private final WaypointPainter<MarcadorWaypoint> pintorMarcadores = new WaypointPainter<>();
     private final List<MarcadorMapa> marcadoresIncidentes = new ArrayList<>();
     private MarcadorMapa puntoSeleccionado;
     private final List<SeleccionListener> oyentesSeleccion = new ArrayList<>();
+    private EstadoController estadoController; // Equipo 2: se crea la primera vez que se abre
+    private EstacionMioDAO estacionMioDAO;
+    private final List<MarcadorMapa> marcadoresEstaciones = new ArrayList<>();
 
     public MapaController(MapaView vista) {
         this.vista = vista;
@@ -50,6 +51,8 @@ public class MapaController {
         vista.getMapViewer().setOverlayPainter(pintorMarcadores);
         inicializarEventos();
         cargarIncidentesEnMapa();
+        this.estacionMioDAO = new EstacionMioDAO();
+        cargarEstacionesEnMapa();
     }
 
     private void inicializarEventos() {
@@ -77,7 +80,6 @@ public class MapaController {
                     JOptionPane.showMessageDialog(vista, "Haga clic en el mapa para seleccionar la ubicación.", "Aviso", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-
                 // Recolectar datos del formulario
                 String tipo = vista.getCbxTipoIncidente().getSelectedItem().toString();
                 String descripcion = vista.getTxtDescripcion().getText();
@@ -93,7 +95,7 @@ public class MapaController {
                     limpiarFormulario();
                     cargarIncidentesEnMapa(); // Refrescar los pines
                 } else {
-                    JOptionPane.showMessageDialog(vista, "Error al guardar en la base de datos.", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(vista, "Error al guardar en la base de datos. ", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -104,7 +106,19 @@ public class MapaController {
         // EVENTO 4: Abrir la red familiar (Equipo 1)
         vista.getItemRedFamiliar().addActionListener(e -> new FamiliaresController(new FamiliaresView(vista)).iniciar());
 
-               // EVENTO 5: Cerrar sesión y volver al login (Equipo 1), preguntando antes
+        // EVENTO 4.2 (Equipo 2): reportar mi estado de supervivencia.
+        // Se crea una sola vez para que la cola de mensajes pendientes se conserve mientras el mapa esté abierto.
+        vista.getItemEstado().addActionListener(e -> {
+            if (estadoController == null) {
+                estadoController = new EstadoController(new EstadoView(), this::ubicacionSeleccionada);
+            }
+            estadoController.iniciar();
+        });
+
+        // EVENTO 4.1: Abrir mi perfil (editar datos y cambiar contraseña)
+        vista.getItemPerfil().addActionListener(e -> new PerfilController(new PerfilView(vista)).iniciar());
+
+        // EVENTO 5: Cerrar sesión y volver al login (Equipo 1), preguntando antes
         vista.getItemCerrarSesion().addActionListener(e -> {
             int respuesta = JOptionPane.showConfirmDialog(vista, "¿Seguro que desea cerrar sesión?",
                     "Cerrar sesión", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -114,7 +128,23 @@ public class MapaController {
             Sesion.cerrar();
             vista.dispose();
             new LoginController(new LoginView()).iniciar();
-        });}
+        });
+    }
+
+    // Equipo 2: coordenadas que el usuario marcó con clic en el mapa (null si todavía no hizo clic)
+    private double[] ubicacionSeleccionada() {
+        try {
+            String lat = vista.getTxtLatitud().getText().trim();
+            String lon = vista.getTxtLongitud().getText().trim();
+            if (lat.isEmpty() || lon.isEmpty()) {
+                return null;
+            }
+            return new double[]{Double.parseDouble(lat), Double.parseDouble(lon)};
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     // Método READ: Pinta en el mapa los incidentes de la BD, cada tipo con su color
     private void cargarIncidentesEnMapa() {
         marcadoresIncidentes.clear();
@@ -137,11 +167,18 @@ public class MapaController {
         if (puntoSeleccionado != null) {
             waypoints.add(new MarcadorWaypoint(puntoSeleccionado));
         }
+        for (MarcadorMapa marcador : marcadoresEstaciones) {
+            waypoints.add(new MarcadorWaypoint(marcador));
+        }
         pintorMarcadores.setWaypoints(waypoints);
         vista.getMapViewer().repaint();
+        
     }
 
-    /** Marca el punto clicado en el mapa y avisa a quienes necesiten sus coordenadas. */
+    /**
+     * Marca el punto clicado en el mapa y avisa a quienes necesiten sus
+     * coordenadas.
+     */
     private void seleccionarPunto(double latitud, double longitud) {
         puntoSeleccionado = new MarcadorMapa(latitud, longitud, TipoMarcador.SELECCION);
         pintarMarcadores();
@@ -160,7 +197,10 @@ public class MapaController {
         }
     }
 
-    /** Punto de enganche para otros módulos que necesiten las coordenadas del clic. */
+    /**
+     * Punto de enganche para otros módulos que necesiten las coordenadas del
+     * clic.
+     */
     public void addSeleccionListener(SeleccionListener oyente) {
         oyentesSeleccion.add(Objects.requireNonNull(oyente, "El oyente es obligatorio."));
     }
@@ -178,5 +218,25 @@ public class MapaController {
             vista.setTitle(vista.getTitle() + " - " + Sesion.getUsuarioActual().getNombreCompleto());
         }
         vista.setVisible(true);
+    }
+
+    private void cargarEstacionesEnMapa() {
+        marcadoresEstaciones.clear();
+        for (EstacionMio est : estacionMioDAO.listarTodas()) {
+            try {
+                marcadoresEstaciones.add(MarcadorMapa.desdeEstacion(est));
+            } catch (IllegalArgumentException ex) {
+                System.err.println("Estación " + est.getId() + " omitida: " + ex.getMessage());
+            }
+        }
+        pintarMarcadores();
+    }
+
+    public boolean cambiarEstadoVia(int idIncidente, EstadoVia nuevoEstado) {
+        boolean exito = incidenteDAO.actualizarEstado(idIncidente, nuevoEstado);
+        if (exito) {
+            cargarIncidentesEnMapa();
+        }
+        return exito;
     }
 }

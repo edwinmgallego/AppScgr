@@ -1,0 +1,37 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package models;
+import java.util.List;
+
+/**
+ *
+ * @author Titoelgato
+ */
+
+public class Hospital extends PuntoAsistencia {
+
+    public Hospital(int id, String nombre, double latitud, double longitud,
+             EstadoPunto estado, ServiciosPunto servicios) {
+        super(id, nombre, latitud, longitud, estado, servicios);
+    }
+
+    /** Punto nuevo: sin id, abierto y sin servicios. */
+    public Hospital(String nombre, double latitud, double longitud) {
+        this(0, nombre, latitud, longitud, EstadoPunto.ABIERTO, new ServiciosPunto());
+    }
+
+    @Override
+    public String getTipoPunto() { 
+        return "HOSPITAL"; }
+
+    @Override
+    public String getEtiquetaTipo() { 
+        return "Hospital"; }
+
+    @Override
+    public List<String> getServiciosSugeridos() {
+        return List.of("ATENCION_MEDICA", "AGUA", "ENERGIA");
+    }
+}
