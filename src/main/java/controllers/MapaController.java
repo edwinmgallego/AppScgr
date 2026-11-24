@@ -9,6 +9,9 @@ import models.Incidente;
 import models.MarcadorMapa;
 import models.TipoMarcador;
 import models.dao.IncidenteDAO;
+import models.EstacionMio;
+import models.EstadoVia;
+import models.dao.EstacionMioDAO;
 import views.EstadoView;
 import views.FamiliaresView;
 import views.LoginView;
@@ -38,6 +41,8 @@ public class MapaController {
     private MarcadorMapa puntoSeleccionado;
     private final List<SeleccionListener> oyentesSeleccion = new ArrayList<>();
     private EstadoController estadoController; // Equipo 2: se crea la primera vez que se abre
+    private EstacionMioDAO estacionMioDAO;
+    private final List<MarcadorMapa> marcadoresEstaciones = new ArrayList<>();
 
     public MapaController(MapaView vista) {
         this.vista = vista;
@@ -46,6 +51,8 @@ public class MapaController {
         vista.getMapViewer().setOverlayPainter(pintorMarcadores);
         inicializarEventos();
         cargarIncidentesEnMapa();
+        this.estacionMioDAO = new EstacionMioDAO();
+        cargarEstacionesEnMapa();
     }
 
     private void inicializarEventos() {
@@ -160,8 +167,12 @@ public class MapaController {
         if (puntoSeleccionado != null) {
             waypoints.add(new MarcadorWaypoint(puntoSeleccionado));
         }
+        for (MarcadorMapa marcador : marcadoresEstaciones) {
+            waypoints.add(new MarcadorWaypoint(marcador));
+        }
         pintorMarcadores.setWaypoints(waypoints);
         vista.getMapViewer().repaint();
+        
     }
 
     /**
@@ -207,5 +218,25 @@ public class MapaController {
             vista.setTitle(vista.getTitle() + " - " + Sesion.getUsuarioActual().getNombreCompleto());
         }
         vista.setVisible(true);
+    }
+
+    private void cargarEstacionesEnMapa() {
+        marcadoresEstaciones.clear();
+        for (EstacionMio est : estacionMioDAO.listarTodas()) {
+            try {
+                marcadoresEstaciones.add(MarcadorMapa.desdeEstacion(est));
+            } catch (IllegalArgumentException ex) {
+                System.err.println("Estación " + est.getId() + " omitida: " + ex.getMessage());
+            }
+        }
+        pintarMarcadores();
+    }
+
+    public boolean cambiarEstadoVia(int idIncidente, EstadoVia nuevoEstado) {
+        boolean exito = incidenteDAO.actualizarEstado(idIncidente, nuevoEstado);
+        if (exito) {
+            cargarIncidentesEnMapa();
+        }
+        return exito;
     }
 }

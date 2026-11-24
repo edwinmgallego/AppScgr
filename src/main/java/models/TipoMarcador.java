@@ -11,7 +11,9 @@ import java.util.Locale;
 public enum TipoMarcador {
 
     VIA_CERRADA("Vía cerrada", true),
+    VIA_ABIERTA("Vía abierta", false),
     DERRUMBE("Derrumbe", true),
+    ESTACION_MIO("Estación MIO", false),
     OTRO("Otro incidente", false),
     SELECCION("Punto seleccionado", false);
 

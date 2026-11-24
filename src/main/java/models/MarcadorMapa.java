@@ -33,8 +33,18 @@ public class MarcadorMapa implements Geolocalizable {
         if (incidente == null) {
             throw new IllegalArgumentException("El incidente es obligatorio.");
         }
-        TipoMarcador tipo = TipoMarcador.desdeTipoIncidente(incidente.getTipo());
+        TipoMarcador tipo = incidente.estaAbierta()
+                ? TipoMarcador.VIA_ABIERTA
+                : TipoMarcador.desdeTipoIncidente(incidente.getTipo());
         return new MarcadorMapa(tipo.getEtiqueta(), incidente.getLatitud(), incidente.getLongitud(), tipo);
+    }
+
+    /** Crea el marcador de una estación del MIO guardada en la base de datos. */
+    public static MarcadorMapa desdeEstacion(EstacionMio estacion) {
+        if (estacion == null) {
+            throw new IllegalArgumentException("La estación es obligatoria.");
+        }
+        return new MarcadorMapa(estacion.toString(), estacion.getLatitud(), estacion.getLongitud(), TipoMarcador.ESTACION_MIO);
     }
 
     /**

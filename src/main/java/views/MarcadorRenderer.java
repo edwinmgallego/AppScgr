@@ -1,15 +1,17 @@
 package views;
 
-import models.MarcadorMapa;
-import models.TipoMarcador;
-import org.jxmapviewer.JXMapViewer;
-import org.jxmapviewer.viewer.WaypointRenderer;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.Point2D;
+
+import org.jxmapviewer.JXMapViewer;
+import org.jxmapviewer.viewer.WaypointRenderer;
+
+import models.MarcadorMapa;
+import models.TipoMarcador;
 
 /**
  * Dibuja cada marcador con el color de su categoría; el punto seleccionado lleva una mira.
@@ -35,6 +37,7 @@ public class MarcadorRenderer implements WaypointRenderer<MarcadorWaypoint> {
                 dibujarSeleccion(g2, x, y);
             } else {
                 dibujarPunto(g2, x, y, colorDe(marcador.getTipo()));
+                dibujarDetalleVia(g2, x, y, marcador.getTipo());
                 dibujarEtiqueta(g2, x + RADIO + 4, y + 4, marcador.getEtiqueta());
             }
         } finally {
@@ -46,7 +49,9 @@ public class MarcadorRenderer implements WaypointRenderer<MarcadorWaypoint> {
     public static Color colorDe(TipoMarcador tipo) {
         return switch (tipo) {
             case VIA_CERRADA -> new Color(210, 40, 40);
+            case VIA_ABIERTA -> new Color(40, 167, 69);
             case DERRUMBE -> new Color(230, 126, 34);
+            case ESTACION_MIO -> new Color(0, 114, 188);
             case SELECCION -> new Color(200, 0, 120);
             default -> new Color(110, 110, 110);
         };
@@ -58,6 +63,19 @@ public class MarcadorRenderer implements WaypointRenderer<MarcadorWaypoint> {
         g.setStroke(new BasicStroke(2f));
         g.setColor(Color.WHITE);
         g.drawOval(x - RADIO, y - RADIO, RADIO * 2, RADIO * 2);
+    }
+
+    private void dibujarDetalleVia(Graphics2D g, int x, int y, TipoMarcador tipo) {
+        if (tipo == TipoMarcador.VIA_CERRADA) {
+            g.setColor(Color.WHITE);
+            g.setStroke(new BasicStroke(2f));
+            g.drawLine(x - 4, y - 4, x + 4, y + 4);
+            g.drawLine(x + 4, y - 4, x - 4, y + 4);
+        } else if (tipo == TipoMarcador.VIA_ABIERTA) {
+            g.setColor(Color.WHITE);
+            g.setStroke(new BasicStroke(2f));
+            g.drawOval(x - 4, y - 4, 8, 8);
+        }
     }
 
     private void dibujarSeleccion(Graphics2D g, int x, int y) {
