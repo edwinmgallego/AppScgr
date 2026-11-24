@@ -8,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -151,8 +152,24 @@ public class UsuarioDAO {
             return false;
         }
     }
-
+/**
+     * Actualiza el nombre y el teléfono del usuario sin tocar su documento ni su contraseña.
+     * El teléfono puede ser null para dejarlo vacío.
+     */
     public boolean actualizarPerfil(int id, String nombre, String telefonoFinal) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        String sql = "UPDATE usuarios SET nombre_completo = ?, telefono = ? WHERE id = ?";
+        try (PreparedStatement pstmt = conexion().prepareStatement(sql)) {
+            pstmt.setString(1, nombre);
+            if (telefonoFinal == null) {
+                pstmt.setNull(2, Types.VARCHAR);
+            } else {
+                pstmt.setString(2, telefonoFinal);
+            }
+            pstmt.setInt(3, id);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error DAO al actualizar el perfil: " + e.getMessage());
+            return false;
+        }
     }
 }
