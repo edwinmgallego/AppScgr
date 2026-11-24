@@ -37,6 +37,12 @@ public final class ActualizadorBD {
                 st.executeUpdate("ALTER TABLE familiares ADD COLUMN es_principal TINYINT(1) NOT NULL DEFAULT 0");
                 System.out.println("Base de datos actualizada: se agregó familiares.es_principal");
             }
+    // Grupo 9 (RF-13): origen del reporte para diferenciar información oficial de la ciudadana.
+            if (!existeColumna(con, "reportes_incidentes", "origen_reporte")) {
+                st.executeUpdate("ALTER TABLE reportes_incidentes "
+                        + "ADD COLUMN origen_reporte VARCHAR(20) NOT NULL DEFAULT 'CIUDADANO'");
+                System.out.println("Base de datos actualizada: se agregó reportes_incidentes.origen_reporte");
+            }
             return true;
         } catch (SQLException e) {
             System.err.println("No se pudo actualizar la base de datos: " + e.getMessage());
