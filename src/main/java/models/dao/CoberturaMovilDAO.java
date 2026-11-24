@@ -1,31 +1,190 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package models.dao;
 
 import config.ConexionDB;
+import models.ReporteCoberturaMovil;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import models.ReporteCoberturaMovil;
 
-/*
- * PROPOSITO GENERAL: Objeto de Acceso a Datos (DAO) encargado de persistir y consultar
- * los reportes de falta de cobertura movil en coordenadas especificas (RF-08) dentro
- * de la tabla compartida 'reportes_incidentes' bajo el tipo 'SIN_SENAL'.
+/**
+ * Persistencia del módulo Cobertura móvil (RF-08).
+ * Tabla propia: reportes_cobertura_movil.
+ *
+ * Incluye la API del Grupo 9 (insertar/listar/buscarPorId/actualizar/eliminar)
+ * y la API del Equipo 5 (registrarFallaCobertura, obtenerReportesSinSenal, ...)
+ * para que ServiciosController y sus pruebas sigan funcionando.
+ *
+ * @author Grupo 9 - Validación Comunitaria y Dashboard
  */
-public class CoberturaMovilDAO {
+public class CoberturaMovilDAO extends BaseDAO {
+
+    @Override
+    protected String getNombreTabla() {
+        return "reportes_cobertura_movil";
+    }
+
+    @Override
+    protected String getSqlCrearTabla() {
+        return "CREATE TABLE IF NOT EXISTS reportes_cobertura_movil ("
+                + "id INT AUTO_INCREMENT PRIMARY KEY, "
+                + "usuario_id INT NOT NULL, "
+                + "zona_barrio VARCHAR(100) NOT NULL, "
+                + "operador VARCHAR(100) NOT NULL, "
+                + "nivel_falla VARCHAR(30) NOT NULL, "
+                + "latitud DOUBLE NOT NULL, "
+                + "longitud DOUBLE NOT NULL, "
+                + "observaciones TEXT, "
+                + "fecha_reporte TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "CONSTRAINT fk_cm_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+    }
+
+    // ===== API del Grupo 9 =====
+
+    public int insertar(ReporteCoberturaMovil r) {
+        String sql = "INSERT INTO reportes_cobertura_movil "
+                + "(usuario_id, zona_barrio, operador, nivel_falla, latitud, longitud, observaciones) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try {
+            Connection conn = conexion();
+            asegurarTabla(conn);
+            try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setInt(1, r.getUsuarioId());
+                ps.setString(2, r.getZonaBarrio());
+                ps.setString(3, r.getOperador());
+                ps.setString(4, r.getNivelFalla());
+                ps.setDouble(5, r.getLatitud());
+                ps.setDouble(6, r.getLongitud());
+                ps.setString(7, r.getObservaciones());
+                ps.executeUpdate();
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        int id = rs.getInt(1);
+                        r.setId(id);
+                        return id;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al insertar cobertura móvil: " + e.getMessage());
+        }
+        return -1;
+    }
+
+    public List<ReporteCoberturaMovil> listar() {
+        List<ReporteCoberturaMovil> lista = new ArrayList<>();
+        String sql = "SELECT id, usuario_id, zona_barrio, operador, nivel_falla, latitud, longitud, observaciones, fecha_reporte "
+                + "FROM reportes_cobertura_movil ORDER BY id DESC";
+        try {
+            Connection conn = conexion();
+            asegurarTabla(conn);
+            try (PreparedStatement ps = conn.prepareStatement(sql);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ReporteCoberturaMovil r = new ReporteCoberturaMovil(
+                            rs.getInt("usuario_id"),
+                            rs.getString("zona_barrio"),
+                            rs.getString("operador"),
+                            rs.getString("nivel_falla"),
+                            rs.getDouble("latitud"),
+                            rs.getDouble("longitud"),
+                            rs.getString("observaciones"));
+                    r.setId(rs.getInt("id"));
+                    java.sql.Timestamp ts = rs.getTimestamp("fecha_reporte");
+                    if (ts != null) {
+                        r.setFechaReporte(ts);
+                    }
+                    lista.add(r);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al listar cobertura móvil: " + e.getMessage());
+        }
+        return lista;
+    }
+
+    public ReporteCoberturaMovil buscarPorId(int id) {
+        String sql = "SELECT id, usuario_id, zona_barrio, operador, nivel_falla, latitud, longitud, observaciones, fecha_reporte "
+                + "FROM reportes_cobertura_movil WHERE id = ?";
+        try {
+            Connection conn = conexion();
+            asegurarTabla(conn);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        ReporteCoberturaMovil r = new ReporteCoberturaMovil(
+                                rs.getInt("usuario_id"),
+                                rs.getString("zona_barrio"),
+                                rs.getString("operador"),
+                                rs.getString("nivel_falla"),
+                                rs.getDouble("latitud"),
+                                rs.getDouble("longitud"),
+                                rs.getString("observaciones"));
+                        r.setId(rs.getInt("id"));
+                        java.sql.Timestamp ts = rs.getTimestamp("fecha_reporte");
+                        if (ts != null) {
+                            r.setFechaReporte(ts);
+                        }
+                        return r;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al buscar cobertura móvil: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public boolean actualizar(ReporteCoberturaMovil r) {
+        String sql = "UPDATE reportes_cobertura_movil SET zona_barrio = ?, operador = ?, nivel_falla = ?, "
+                + "latitud = ?, longitud = ?, observaciones = ? WHERE id = ?";
+        try {
+            Connection conn = conexion();
+            asegurarTabla(conn);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, r.getZonaBarrio());
+                ps.setString(2, r.getOperador());
+                ps.setString(3, r.getNivelFalla());
+                ps.setDouble(4, r.getLatitud());
+                ps.setDouble(5, r.getLongitud());
+                ps.setString(6, r.getObservaciones());
+                ps.setInt(7, r.getId());
+                return ps.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al actualizar cobertura móvil: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean eliminar(int id) {
+        String sql = "DELETE FROM reportes_cobertura_movil WHERE id = ?";
+        try {
+            Connection conn = conexion();
+            asegurarTabla(conn);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, id);
+                return ps.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al eliminar cobertura móvil: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // ===== API del Equipo 5 (conservada por compatibilidad) =====
 
     public boolean registrarFallaCobertura(ReporteCoberturaMovil reporte) {
         if (reporte == null || reporte.getZonaBarrio() == null || reporte.getOperador() == null) {
             return false;
         }
         String sql = "INSERT INTO reportes_incidentes (usuario_id, tipo_incidente, descripcion, latitud, longitud, estado) "
-                   + "VALUES (?, 'SIN_SENAL', ?, ?, ?, 'ACTIVO')";
+                + "VALUES (?, 'SIN_SENAL', ?, ?, ?, 'ACTIVO')";
 
         String descripcionFormateada = String.format("[BARRIO: %s | OPERADOR: %s | FALLA: %s] %s",
                 reporte.getZonaBarrio(),
