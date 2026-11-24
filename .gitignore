@@ -17,3 +17,8 @@ nb-configuration.xml
 Thumbs.db
 .idea/
 *.iml
+
+# Caché local de la red vial descargada de OpenStreetMap (módulo de rutas)
+/cache/
+
+
