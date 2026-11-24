@@ -15,8 +15,6 @@ import models.Incidente;
 import models.MarcadorMapa;
 import models.TipoMarcador;
 import models.dao.IncidenteDAO;
-import models.EstacionMio;
-import models.dao.EstacionMioDAO;
 import views.EstadoView;
 import views.FamiliaresView;
 import views.LoginView;
@@ -52,8 +50,6 @@ public class MapaController {
     private Incidente incidenteSeleccionado; // null = se está creando un reporte nuevo
     private static final double DISTANCIA_CLIC_PX = 12;
     private EstadoController estadoController; // Equipo 2: se crea la primera vez que se abre
-    private EstacionMioDAO estacionMioDAO;
-    private final List<MarcadorMapa> marcadoresEstaciones = new ArrayList<>();
 
     public MapaController(MapaView vista) {
         this.vista = vista;
@@ -62,8 +58,6 @@ public class MapaController {
         vista.getMapViewer().setOverlayPainter(pintorMarcadores);
         inicializarEventos();
         cargarIncidentesEnMapa();
-        this.estacionMioDAO = new EstacionMioDAO();
-        cargarEstacionesEnMapa();
     }
 
     private void inicializarEventos() {
@@ -191,26 +185,11 @@ public class MapaController {
         for (MarcadorMapa marcador : marcadoresIncidentes) {
             waypoints.add(new MarcadorWaypoint(marcador));
         }
-        for (MarcadorMapa marcador : marcadoresEstaciones) {
-            waypoints.add(new MarcadorWaypoint(marcador));
-        }
         if (puntoSeleccionado != null) {
             waypoints.add(new MarcadorWaypoint(puntoSeleccionado));
         }
         pintorMarcadores.setWaypoints(waypoints);
         vista.getMapViewer().repaint();
-    }
-
-    private void cargarEstacionesEnMapa() {
-        marcadoresEstaciones.clear();
-        for (EstacionMio est : estacionMioDAO.listarTodas()) {
-            try {
-                marcadoresEstaciones.add(MarcadorMapa.desdeEstacion(est));
-            } catch (IllegalArgumentException ex) {
-                System.err.println("Estación " + est.getId() + " omitida: " + ex.getMessage());
-            }
-        }
-        pintarMarcadores();
     }
 
     /** Marca el punto clicado en el mapa y avisa a quienes necesiten sus coordenadas. */
