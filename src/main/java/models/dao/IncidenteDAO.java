@@ -38,9 +38,27 @@ public class IncidenteDAO {
                     }
                 }
             }
+            corregirColumnaEstadoEnum(conn);
             columnaEstadoVerificada = true;
         } catch (SQLException e) {
             System.err.println("Aviso DAO al verificar columna 'estado': " + e.getMessage());
+        }
+    }
+
+    /**
+     * La columna 'estado' la comparten el Equipo 3 (ABIERTA/CERRADA) y el Equipo 5
+     * (ACTIVO/RESUELTO). Si una versión anterior del script la creó como ENUM, los
+     * valores del Equipo 5 se rechazan; aquí se convierte a VARCHAR sin perder datos.
+     */
+    private void corregirColumnaEstadoEnum(Connection conn) throws SQLException {
+        String sql = "SELECT DATA_TYPE FROM information_schema.COLUMNS "
+                + "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'reportes_incidentes' AND COLUMN_NAME = 'estado'";
+        try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+            if (rs.next() && "enum".equalsIgnoreCase(rs.getString("DATA_TYPE"))) {
+                try (Statement alter = conn.createStatement()) {
+                    alter.executeUpdate("ALTER TABLE reportes_incidentes MODIFY COLUMN estado VARCHAR(20) NOT NULL DEFAULT 'CERRADA'");
+                }
+            }
         }
     }
 
