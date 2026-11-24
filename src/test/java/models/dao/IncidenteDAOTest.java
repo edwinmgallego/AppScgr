@@ -15,6 +15,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
+import models.EstadoVia;
+import org.junit.jupiter.api.DisplayName;
 
 public class IncidenteDAOTest {
 
@@ -114,5 +116,34 @@ public class IncidenteDAOTest {
     @Test
     public void testEliminarIncidenteInexistente() {
         assertFalse(incidenteDAO.eliminarIncidente(-1));
+    }
+
+    // ===== Equipo 3: pruebas de estado de vía (ABIERTA / CERRADA) =====
+
+    @Test
+    @DisplayName("RF-03: Debe persistir un incidente con estado CERRADA por defecto")
+    public void testInsertarIncidenteCerrado() {
+        Incidente inc = crearIncidenteDePrueba("Prueba estado cerrada " + System.nanoTime());
+
+        assertEquals(EstadoVia.CERRADA, inc.getEstadoVia());
+        assertFalse(inc.estaAbierta());
+
+        incidenteDAO.eliminarIncidente(inc.getId());
+    }
+
+    @Test
+    @DisplayName("RF-03: Debe actualizar el estado de una vía de CERRADA a ABIERTA")
+    public void testReabrirVia() {
+        Incidente inc = crearIncidenteDePrueba("Prueba reabrir via " + System.nanoTime());
+
+        assertTrue(incidenteDAO.actualizarEstado(inc.getId(), EstadoVia.ABIERTA),
+                "El estado debe cambiar a ABIERTA en BD.");
+
+        Incidente recuperado = buscarPorId(inc.getId());
+        assertNotNull(recuperado);
+        assertEquals(EstadoVia.ABIERTA, recuperado.getEstadoVia());
+        assertTrue(recuperado.estaAbierta());
+
+        incidenteDAO.eliminarIncidente(inc.getId());
     }
 }
