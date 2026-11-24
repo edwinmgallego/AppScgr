@@ -3,20 +3,21 @@ package controllers;
 import config.Sesion;
 import models.Usuario;
 import models.dao.UsuarioDAO;
+import views.DashboardView;
 import views.LoginView;
-import views.MapaView;
 import views.RegistroView;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.JOptionPane;
 
 /**
- * Controla el inicio de sesión. Si el login es correcto guarda el usuario
- * en Sesion y abre la ventana principal del mapa.
+ * Controla el inicio de sesión. Si el login es correcto guarda el usuario en
+ * Sesion y abre la ventana principal del mapa.
  *
  * @author Equipo 1 - Autenticación y Red Familiar
  */
 public class LoginController {
+
     private final LoginView vista;
     private final UsuarioDAO usuarioDAO;
     private final char caracterOculto; // el símbolo con que el campo esconde la contraseña (•)
@@ -55,13 +56,12 @@ public class LoginController {
 
         Sesion.iniciar(usuario);
         vista.dispose();
-        new MapaController(new MapaView()).iniciar();
+        new DashboardController(new DashboardView()).iniciar();
     }
 
     // Reemplaza la ventana de login por la de registro (no abre una ventana emergente encima)
     private void abrirRegistro() {
         RegistroController registro = new RegistroController(new RegistroView());
-
         // Cuando la ventana de registro se cierre (por registrarse o por cancelar) se vuelve al login.
         // Como el registro ya no es modal, el código no se queda esperando: hay que "escuchar" el cierre.
         registro.getVista().addWindowListener(new WindowAdapter() {
@@ -70,9 +70,8 @@ public class LoginController {
                 volverAlLogin(registro);
             }
         });
-
         vista.setVisible(false); // oculta el login (no se cierra, así conserva lo escrito)
-        registro.iniciar();      // muestra el registro en su lugar
+        registro.iniciar(); // muestra el registro en su lugar
     }
 
     // Muestra otra vez el login; si el usuario se acaba de registrar, deja su documento escrito
