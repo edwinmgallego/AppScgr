@@ -37,6 +37,14 @@ public class MarcadorMapa implements Geolocalizable {
         return new MarcadorMapa(tipo.getEtiqueta(), incidente.getLatitud(), incidente.getLongitud(), tipo);
     }
 
+    /** Crea el marcador de una estación del MIO guardada en la base de datos. */
+    public static MarcadorMapa desdeEstacion(EstacionMio estacion) {
+        if (estacion == null) {
+            throw new IllegalArgumentException("La estación es obligatoria.");
+        }
+        return new MarcadorMapa(estacion.toString(), estacion.getLatitud(), estacion.getLongitud(), TipoMarcador.ESTACION_MIO);
+    }
+
     /**
      * El mapa se repite horizontalmente: al arrastrarlo, un clic puede dar longitudes
      * fuera de [-180, 180]. Este método las lleva de vuelta a ese rango.
