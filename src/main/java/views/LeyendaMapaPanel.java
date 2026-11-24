@@ -7,6 +7,7 @@ package views;
 import models.TipoMarcador;
 
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -18,15 +19,20 @@ import javax.swing.JPanel;
  */
 public class LeyendaMapaPanel extends JPanel {
 
+    /** Entradas por fila: con todos los tipos en una sola fila, las últimas no caben en la ventana. */
+    private static final int COLUMNAS = 5;
+
     public LeyendaMapaPanel() {
-        setLayout(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        setLayout(new GridLayout(0, COLUMNAS, 8, 2));
         setBorder(BorderFactory.createTitledBorder("Leyenda"));
 
         for (TipoMarcador tipo : TipoMarcador.values()) {
+            JPanel entrada = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
             JLabel punto = new JLabel("●"); // círculo relleno
             punto.setForeground(MarcadorRenderer.colorDe(tipo));
-            add(punto);
-            add(new JLabel(tipo.getEtiqueta()));
+            entrada.add(punto);
+            entrada.add(new JLabel(tipo.getEtiqueta()));
+            add(entrada);
         }
     }
 }

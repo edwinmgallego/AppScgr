@@ -14,6 +14,9 @@ public enum TipoMarcador {
     VIA_ABIERTA("Vía abierta", false),
     DERRUMBE("Derrumbe", true),
     ESTACION_MIO("Estación MIO", false),
+    FALLA_SERVICIO("Falla de servicio", true),
+    SIN_SENAL("Sin señal", true),
+    DANO_ESTRUCTURAL("Daño estructural", true),
     OTRO("Otro incidente", false),
     SELECCION("Punto seleccionado", false);
 
@@ -28,8 +31,9 @@ public enum TipoMarcador {
     public String getEtiqueta() { return etiqueta; }
 
     /**
-     * Traduce el tipo_incidente guardado en la base de datos. Los tipos que todavía
-     * no tienen marcador propio (servicios, señal, daños) se muestran como OTRO.
+     * Traduce el tipo_incidente guardado en la base de datos. Cada tipo del formulario
+     * (vía cerrada, derrumbe, falla de servicio, sin señal, daño estructural) tiene su
+     * propio marcador; solo un texto desconocido, nulo o vacío se muestra como OTRO.
      */
     public static TipoMarcador desdeTipoIncidente(String tipoIncidente) {
         if (tipoIncidente != null) {

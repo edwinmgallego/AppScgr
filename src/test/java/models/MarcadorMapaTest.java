@@ -62,8 +62,13 @@ public class MarcadorMapaTest {
         assertEquals(3.4516, m.getLatitud(), 0.0001);
         assertEquals(-76.5320, m.getLongitud(), 0.0001);
 
-        Incidente otro = new Incidente(2, "SIN_SENAL", 3.40, -76.50, "");
-        assertEquals(TipoMarcador.OTRO, MarcadorMapa.desdeIncidente(otro).getTipo());
+        Incidente senal = new Incidente(2, "SIN_SENAL", 3.40, -76.50, "");
+        MarcadorMapa marcadorSenal = MarcadorMapa.desdeIncidente(senal);
+        assertEquals(TipoMarcador.SIN_SENAL, marcadorSenal.getTipo());
+        assertEquals("Sin señal", marcadorSenal.getEtiqueta());
+
+        Incidente desconocido = new Incidente(4, "INUNDACION", 3.40, -76.50, "");
+        assertEquals(TipoMarcador.OTRO, MarcadorMapa.desdeIncidente(desconocido).getTipo());
     }
 
     @Test

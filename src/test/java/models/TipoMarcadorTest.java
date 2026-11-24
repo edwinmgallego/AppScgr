@@ -26,10 +26,22 @@ public class TipoMarcadorTest {
     }
 
     @Test
-    public void testTiposDeOtrosEquiposSeMuestranComoOtro() {
-        assertEquals(TipoMarcador.OTRO, TipoMarcador.desdeTipoIncidente("FALLA_SERVICIO"));
-        assertEquals(TipoMarcador.OTRO, TipoMarcador.desdeTipoIncidente("SIN_SENAL"));
-        assertEquals(TipoMarcador.OTRO, TipoMarcador.desdeTipoIncidente("DANO_ESTRUCTURAL"));
+    public void testTiposDeOtrosEquiposTienenMarcadorPropio() {
+        assertEquals(TipoMarcador.FALLA_SERVICIO, TipoMarcador.desdeTipoIncidente("FALLA_SERVICIO"));
+        assertEquals(TipoMarcador.SIN_SENAL, TipoMarcador.desdeTipoIncidente("SIN_SENAL"));
+        assertEquals(TipoMarcador.DANO_ESTRUCTURAL, TipoMarcador.desdeTipoIncidente("DANO_ESTRUCTURAL"));
+    }
+
+    @Test
+    public void testTipoDesconocidoEsOtro() {
+        assertEquals(TipoMarcador.OTRO, TipoMarcador.desdeTipoIncidente("INUNDACION"));
+    }
+
+    @Test
+    public void testSoloOtroUsaLaEtiquetaGenerica() {
+        for (String tipo : new String[]{"VIA_CERRADA", "DERRUMBE", "FALLA_SERVICIO", "SIN_SENAL", "DANO_ESTRUCTURAL"}) {
+            assertNotEquals(TipoMarcador.OTRO, TipoMarcador.desdeTipoIncidente(tipo), tipo);
+        }
     }
 
     @Test
@@ -47,5 +59,8 @@ public class TipoMarcadorTest {
     public void testEtiqueta() {
         assertEquals("Vía cerrada", TipoMarcador.VIA_CERRADA.getEtiqueta());
         assertEquals("Derrumbe", TipoMarcador.DERRUMBE.toString());
+        assertEquals("Falla de servicio", TipoMarcador.FALLA_SERVICIO.getEtiqueta());
+        assertEquals("Sin señal", TipoMarcador.SIN_SENAL.getEtiqueta());
+        assertEquals("Daño estructural", TipoMarcador.DANO_ESTRUCTURAL.getEtiqueta());
     }
 }
