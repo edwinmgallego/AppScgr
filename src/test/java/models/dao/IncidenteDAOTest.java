@@ -55,4 +55,64 @@ public class IncidenteDAOTest {
         // Comprobamos que al menos traiga el registro que insertamos en la prueba anterior
         assertTrue(lista.size() > 0, "Debería haber al menos un incidente registrado en la base de datos.");
     }
+
+    // ===== Equipo 3: pruebas de actualizar y eliminar reportes =====
+
+    /** Registra un reporte de prueba y lo busca en la BD para conocer su id. */
+    private Incidente crearIncidenteDePrueba(String descripcion) {
+        assertTrue(incidenteDAO.registrarIncidente(
+                new Incidente(0, "VIA_CERRADA", 3.4516, -76.5320, descripcion), 1));
+        for (Incidente inc : incidenteDAO.obtenerTodosLosIncidentes()) {
+            if (descripcion.equals(inc.getDescripcion())) {
+                return inc;
+            }
+        }
+        fail("No se encontró el reporte de prueba recién registrado.");
+        return null;
+    }
+
+    /** Busca un reporte por su id, o devuelve null si ya no existe. */
+    private Incidente buscarPorId(int id) {
+        for (Incidente inc : incidenteDAO.obtenerTodosLosIncidentes()) {
+            if (inc.getId() == id) {
+                return inc;
+            }
+        }
+        return null;
+    }
+
+    @Test
+    public void testActualizarIncidente() {
+        Incidente original = crearIncidenteDePrueba("Prueba actualizar " + System.nanoTime());
+        Incidente cambios = new Incidente(original.getId(), "DERRUMBE", 3.45, -76.53, "Descripción actualizada");
+
+        assertTrue(incidenteDAO.actualizarIncidente(cambios), "El reporte debería actualizarse.");
+
+        Incidente guardado = buscarPorId(original.getId());
+        assertNotNull(guardado, "El reporte actualizado debería seguir existiendo.");
+        assertEquals("DERRUMBE", guardado.getTipo());
+        assertEquals("Descripción actualizada", guardado.getDescripcion());
+
+        incidenteDAO.eliminarIncidente(original.getId()); // Limpiar la BD
+    }
+
+    @Test
+    public void testEliminarIncidente() {
+        Incidente inc = crearIncidenteDePrueba("Prueba eliminar " + System.nanoTime());
+
+        assertTrue(incidenteDAO.eliminarIncidente(inc.getId()), "El reporte debería eliminarse.");
+        assertNull(buscarPorId(inc.getId()), "El reporte ya no debería existir en la BD.");
+    }
+
+    @Test
+    public void testActualizarIncidenteInexistente() {
+        // Un id que no existe: no debería cambiar ninguna fila
+        Incidente fantasma = new Incidente(-1, "VIA_CERRADA", 0, 0, "No existe");
+        assertFalse(incidenteDAO.actualizarIncidente(fantasma));
+    }
+
+    @Test
+    public void testEliminarIncidenteInexistente() {
+        assertFalse(incidenteDAO.eliminarIncidente(-1));
+    }
 }

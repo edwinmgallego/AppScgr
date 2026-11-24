@@ -30,6 +30,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -44,6 +46,9 @@ public class MapaController {
     private final List<MarcadorMapa> marcadoresIncidentes = new ArrayList<>();
     private MarcadorMapa puntoSeleccionado;
     private final List<SeleccionListener> oyentesSeleccion = new ArrayList<>();
+    private final List<Incidente> incidentes = new ArrayList<>();
+    private Incidente incidenteSeleccionado; // null = se está creando un reporte nuevo
+    private static final double DISTANCIA_CLIC_PX = 12;
     private EstadoController estadoController; // Equipo 2: se crea la primera vez que se abre
 
     public MapaController(MapaView vista) {
@@ -61,6 +66,11 @@ public class MapaController {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getButton() == MouseEvent.BUTTON1) { // Solo clic izquierdo
+                    Incidente cercano = buscarIncidenteCerca(e.getPoint());
+                    if (cercano != null) {
+                        cargarEnFormulario(cercano);
+                        return; // Se hizo clic en un reporte existente
+                    }
                     // Convertir el punto del píxel de la pantalla a coordenadas GPS
                     GeoPosition posicion = vista.getMapViewer().convertPointToGeoPosition(e.getPoint());
                     // Al arrastrar el mapa, la longitud puede salirse de [-180, 180]
@@ -76,14 +86,18 @@ public class MapaController {
         vista.getBtnGuardar().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (vista.getTxtLatitud().getText().isEmpty()) {
-                    JOptionPane.showMessageDialog(vista, "Haga clic en el mapa para seleccionar la ubicación.", "Aviso", JOptionPane.WARNING_MESSAGE);
-                    return;
+                String error = validarFormulario(
+                        vista.getTxtLatitud().getText(),
+                        (String) vista.getCbxTipoIncidente().getSelectedItem(),
+                        vista.getTxtDescripcion().getText());
+                if (error != null) {
+                    JOptionPane.showMessageDialog(vista, error, "Aviso", JOptionPane.WARNING_MESSAGE);
+                    return; // Si hay error, no se guarda nada
                 }
 
                 // Recolectar datos del formulario
                 String tipo = vista.getCbxTipoIncidente().getSelectedItem().toString();
-                String descripcion = vista.getTxtDescripcion().getText();
+                String descripcion = vista.getTxtDescripcion().getText().trim();
                 double lat = Double.parseDouble(vista.getTxtLatitud().getText());
                 double lon = Double.parseDouble(vista.getTxtLongitud().getText());
 
@@ -103,6 +117,12 @@ public class MapaController {
 
         // EVENTO 3: Limpiar formulario
         vista.getBtnLimpiar().addActionListener(e -> limpiarFormulario());
+
+        // EVENTO 3.1: Actualizar el reporte seleccionado (UPDATE) - Equipo 3
+        vista.getBtnActualizar().addActionListener(e -> actualizarReporte());
+
+        // EVENTO 3.2: Eliminar el reporte seleccionado (DELETE) - Equipo 3
+        vista.getBtnEliminar().addActionListener(e -> eliminarReporte());
 
         // EVENTO 4: Abrir la red familiar (Equipo 1)
         vista.getItemRedFamiliar().addActionListener(e -> new FamiliaresController(new FamiliaresView(vista)).iniciar());
@@ -147,9 +167,11 @@ public class MapaController {
     // Método READ: Pinta en el mapa los incidentes de la BD, cada tipo con su color
     private void cargarIncidentesEnMapa() {
         marcadoresIncidentes.clear();
+        incidentes.clear();
         for (Incidente inc : incidenteDAO.obtenerTodosLosIncidentes()) {
             try {
                 marcadoresIncidentes.add(MarcadorMapa.desdeIncidente(inc));
+                incidentes.add(inc); // Se guarda para poder encontrarlo al hacer clic
             } catch (IllegalArgumentException ex) {
                 // Un registro con coordenadas inválidas no debe impedir pintar los demás
                 System.err.println("Incidente " + inc.getId() + " omitido: " + ex.getMessage());
@@ -194,11 +216,106 @@ public class MapaController {
         oyentesSeleccion.add(Objects.requireNonNull(oyente, "El oyente es obligatorio."));
     }
 
+    /** Borra el reporte seleccionado, preguntando antes para evitar errores. */
+    private void eliminarReporte() {
+        if (incidenteSeleccionado == null) {
+            return; // No hay ningún reporte seleccionado
+        }
+        int respuesta = JOptionPane.showConfirmDialog(vista,
+                "¿Seguro que desea eliminar este reporte? Esta acción no se puede deshacer.",
+                "Eliminar reporte", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (respuesta != JOptionPane.YES_OPTION) {
+            return; // Dijo que no: no se borra nada
+        }
+
+        if (incidenteDAO.eliminarIncidente(incidenteSeleccionado.getId())) {
+            JOptionPane.showMessageDialog(vista, "Reporte eliminado.");
+            limpiarFormulario();
+            cargarIncidentesEnMapa(); // El marcador desaparece del mapa
+        } else {
+            JOptionPane.showMessageDialog(vista, "Error al eliminar en la base de datos.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /** Guarda en la base de datos los cambios del reporte seleccionado. */
+    private void actualizarReporte() {
+        if (incidenteSeleccionado == null) {
+            return; // No hay ningún reporte seleccionado
+        }
+        String tipo = (String) vista.getCbxTipoIncidente().getSelectedItem();
+        String error = validarFormulario(vista.getTxtLatitud().getText(), tipo, vista.getTxtDescripcion().getText());
+        if (error != null) {
+            JOptionPane.showMessageDialog(vista, error, "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Se crea un objeto con el mismo id y los datos nuevos del formulario
+        Incidente cambios = new Incidente(
+                incidenteSeleccionado.getId(),
+                tipo,
+                Double.parseDouble(vista.getTxtLatitud().getText()),
+                Double.parseDouble(vista.getTxtLongitud().getText()),
+                vista.getTxtDescripcion().getText().trim());
+
+        if (incidenteDAO.actualizarIncidente(cambios)) {
+            JOptionPane.showMessageDialog(vista, "Reporte actualizado exitosamente.");
+            limpiarFormulario();
+            cargarIncidentesEnMapa(); // Refrescar los marcadores
+        } else {
+            JOptionPane.showMessageDialog(vista, "Error al actualizar en la base de datos.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    /** Busca el reporte cuyo marcador está más cerca del clic, o null si no hay ninguno cerca. */
+    private Incidente buscarIncidenteCerca(Point clic) {
+        Incidente masCercano = null;
+        double menorDistancia = DISTANCIA_CLIC_PX;
+        for (Incidente inc : incidentes) {
+            Point2D punto = vista.getMapViewer().convertGeoPositionToPoint(
+                    new GeoPosition(inc.getLatitud(), inc.getLongitud()));
+            double distancia = punto.distance(clic);
+            if (distancia <= menorDistancia) {
+                menorDistancia = distancia;
+                masCercano = inc;
+            }
+        }
+        return masCercano;
+    }
+
+    /** Llena el formulario con un reporte existente y activa Actualizar/Eliminar. */
+    private void cargarEnFormulario(Incidente inc) {
+        incidenteSeleccionado = inc;
+        vista.getCbxTipoIncidente().setSelectedItem(inc.getTipo());
+        vista.getTxtDescripcion().setText(inc.getDescripcion());
+        vista.getTxtLatitud().setText(String.valueOf(inc.getLatitud()));
+        vista.getTxtLongitud().setText(String.valueOf(inc.getLongitud()));
+        vista.getBtnGuardar().setEnabled(false);
+        vista.getBtnActualizar().setEnabled(true);
+        vista.getBtnEliminar().setEnabled(true);
+        seleccionarPunto(inc.getLatitud(), inc.getLongitud());
+    }
+    /** Devuelve el mensaje de error, o null si el formulario está bien. */
+    static String validarFormulario(String latitud, String tipo, String descripcion) {
+        if (latitud == null || latitud.isBlank()) {
+            return "Haga clic en el mapa para seleccionar la ubicación.";
+        }
+        if (tipo == null || tipo.isBlank()) {
+            return "Seleccione el tipo de incidente.";
+        }
+        if (descripcion == null || descripcion.isBlank()) {
+            return "Escriba una descripción del incidente.";
+        }
+        return null;
+    }
+
     private void limpiarFormulario() {
         vista.getCbxTipoIncidente().setSelectedIndex(0);
         vista.getTxtDescripcion().setText("");
         vista.getTxtLatitud().setText("");
         vista.getTxtLongitud().setText("");
+        incidenteSeleccionado = null;
+        vista.getBtnGuardar().setEnabled(true);
+        vista.getBtnActualizar().setEnabled(false);
+        vista.getBtnEliminar().setEnabled(false);
         limpiarSeleccion();
     }
 
