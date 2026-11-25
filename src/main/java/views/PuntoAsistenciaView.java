@@ -1,6 +1,13 @@
 
 package views;
-
+import config.ConfiguracionMapa;
+import org.jxmapviewer.JXMapViewer;
+import org.jxmapviewer.OSMTileFactoryInfo;
+import org.jxmapviewer.input.PanMouseInputListener;
+import org.jxmapviewer.input.ZoomMouseWheelListenerCursor;
+import org.jxmapviewer.viewer.DefaultTileFactory;
+import org.jxmapviewer.viewer.GeoPosition;
+import org.jxmapviewer.viewer.TileFactoryInfo;
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -29,6 +36,7 @@ public class PuntoAsistenciaView extends JDialog {
 
     private final DefaultTableModel modeloPuntos;
     private final JTable tblPuntos;
+    private final JXMapViewer mapViewer = new JXMapViewer();
 
     private final JButton btnNuevo = new JButton("Nuevo");
     private final JButton btnGuardar = new JButton("Guardar");
@@ -40,7 +48,7 @@ public class PuntoAsistenciaView extends JDialog {
         super(padre, "Puntos de asistencia", true);
 
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        setSize(950, 560);
+        setSize(1250, 700);
         setLayout(new BorderLayout(8, 8));
 
         JPanel panelForm = new JPanel(new GridLayout(0, 4, 8, 6));
@@ -130,7 +138,10 @@ public class PuntoAsistenciaView extends JDialog {
         panelLista.add(barraFiltro, BorderLayout.NORTH);
         panelLista.add(new JScrollPane(tblPuntos), BorderLayout.CENTER);
 
-        add(panelLista, BorderLayout.CENTER);
+        configurarMapa();
+        JSplitPane division = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panelLista, mapViewer);
+        division.setResizeWeight(0.5);
+        add(division, BorderLayout.CENTER);
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
@@ -200,6 +211,31 @@ public class PuntoAsistenciaView extends JDialog {
         return btnEliminar;
     }
 
+    private void configurarMapa() {
+    // OpenStreetMap bloquea las peticiones que no se identifican
+    System.setProperty("http.agent", ConfiguracionMapa.USER_AGENT);
+    TileFactoryInfo info = new OSMTileFactoryInfo() {
+        @Override
+        public String getTileUrl(int x, int y, int zoom) {
+            return ConfiguracionMapa.aHttps(super.getTileUrl(x, y, zoom));
+        }
+    };
+    mapViewer.setTileFactory(new DefaultTileFactory(info));
+    mapViewer.setZoom(ConfiguracionMapa.ZOOM_INICIAL);
+    mapViewer.setAddressLocation(new GeoPosition(
+            ConfiguracionMapa.CALI_LATITUD, ConfiguracionMapa.CALI_LONGITUD));
+    PanMouseInputListener arrastre = new PanMouseInputListener(mapViewer);
+    mapViewer.addMouseListener(arrastre);
+    mapViewer.addMouseMotionListener(arrastre);
+    mapViewer.addMouseWheelListener(new ZoomMouseWheelListenerCursor(mapViewer));
+    mapViewer.setPreferredSize(new Dimension(500, 400));
+}
+
+public JXMapViewer getMapViewer() {
+    return mapViewer;
+}
+    
+    
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             PuntoAsistenciaView ventana = new PuntoAsistenciaView(null);
