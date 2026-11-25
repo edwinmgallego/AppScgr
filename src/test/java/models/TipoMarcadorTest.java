@@ -56,11 +56,20 @@ public class TipoMarcadorTest {
     }
 
     @Test
+    public void testMarcadoresQueNoVienenDeLaTablaDeIncidentes() {
+        // Estos tipos los arma el mapa; un texto igual en la BD no debe confundirse con ellos
+        assertEquals(TipoMarcador.OTRO, TipoMarcador.desdeTipoIncidente("VIA_ABIERTA"));
+        assertEquals(TipoMarcador.OTRO, TipoMarcador.desdeTipoIncidente("ESTACION_MIO"));
+        assertEquals(TipoMarcador.OTRO, TipoMarcador.desdeTipoIncidente("ESTACION_MIO_NO_OPERATIVA"));
+    }
+
+    @Test
     public void testEtiqueta() {
         assertEquals("Vía cerrada", TipoMarcador.VIA_CERRADA.getEtiqueta());
         assertEquals("Derrumbe", TipoMarcador.DERRUMBE.toString());
         assertEquals("Falla de servicio", TipoMarcador.FALLA_SERVICIO.getEtiqueta());
         assertEquals("Sin señal", TipoMarcador.SIN_SENAL.getEtiqueta());
         assertEquals("Daño estructural", TipoMarcador.DANO_ESTRUCTURAL.getEtiqueta());
+        assertEquals("MIO no operativa", TipoMarcador.ESTACION_MIO_NO_OPERATIVA.getEtiqueta());
     }
 }
