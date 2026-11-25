@@ -38,6 +38,8 @@ public class MapaView extends JFrame {
 
     public static final String TEXTO_REABRIR_VIA = "Marcar vía como abierta";
     public static final String TEXTO_CERRAR_VIA = "Marcar vía como cerrada";
+    public static final String TEXTO_ESTACION_NO_OPERATIVA = "Marcar estación como no operativa";
+    public static final String TEXTO_ESTACION_OPERATIVA = "Marcar estación como operativa";
 
     private JXMapViewer mapViewer;
     private JComboBox<String> cbxTipoIncidente;
@@ -49,6 +51,7 @@ public class MapaView extends JFrame {
     private JButton btnActualizar;
     private JButton btnEliminar;
     private JButton btnCambiarEstadoVia; // RF-03: reabrir o volver a cerrar una vía
+    private JButton btnCambiarEstadoEstacion; // RF-03: operatividad de una estación del MIO
     private JMenuItem itemRedFamiliar;
     private JMenuItem itemEstado; // Equipo 2: reportar estado de supervivencia
     private JMenuItem itemPerfil;
@@ -140,6 +143,12 @@ public class MapaView extends JFrame {
         gbc.gridy = 9;
         panelCrud.add(btnCambiarEstadoVia, gbc);
 
+        // Operatividad del MIO (RF-03): solo se activa al hacer clic en una estación
+        btnCambiarEstadoEstacion = new JButton(TEXTO_ESTACION_NO_OPERATIVA);
+        btnCambiarEstadoEstacion.setEnabled(false);
+        gbc.gridy = 10;
+        panelCrud.add(btnCambiarEstadoEstacion, gbc);
+
         // --- MENÚ DE CUENTA (Equipo 1: Autenticación y Red Familiar) ---
         JMenuBar barraMenu = new JMenuBar();
         JMenu menuCuenta = new JMenu("Cuenta");
@@ -200,6 +209,10 @@ public class MapaView extends JFrame {
 
     public JButton getBtnCambiarEstadoVia() {
         return btnCambiarEstadoVia;
+    }
+
+    public JButton getBtnCambiarEstadoEstacion() {
+        return btnCambiarEstadoEstacion;
     }
 
     public JMenuItem getItemRedFamiliar() {
