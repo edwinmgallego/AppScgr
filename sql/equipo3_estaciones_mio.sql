@@ -1,11 +1,11 @@
-USE emergencias.db;
+USE emergencias_db;
 
 CREATE TABLE IF NOT EXISTS estaciones_mio(
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     latitud DOUBLE NOT NULL,
     longitud DOUBLE NOT NULL,
-    operativa BOOLEAN NOT NULL DEFAULT TRUE,
+    operativa BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 INSERT INTO estaciones_mio (nombre, latitud, longitud, operativa) VALUES

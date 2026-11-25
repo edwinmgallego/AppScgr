@@ -56,6 +56,15 @@ public class Incidente implements Geolocalizable {
 
     public boolean estaAbierta() { return this.estadoVia == EstadoVia.ABIERTA; }
 
+    /**
+     * Solo los cierres viales y los derrumbes tienen estado de vía (abierta/cerrada).
+     * Los demás tipos comparten la columna 'estado' con otro significado (Equipo 5).
+     */
+    public boolean afectaVia() {
+        TipoMarcador categoria = TipoMarcador.desdeTipoIncidente(tipo);
+        return categoria == TipoMarcador.VIA_CERRADA || categoria == TipoMarcador.DERRUMBE;
+    }
+
     public void marcarComoReabierta() { this.estadoVia = EstadoVia.ABIERTA; }
 
     public void marcarComoCerrada() { this.estadoVia = EstadoVia.CERRADA; }

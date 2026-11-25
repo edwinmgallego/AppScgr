@@ -33,29 +33,53 @@ public class IncidenteDAOTest {
     @Test
     public void testRegistrarIncidente() {
         // 1. Preparar los datos de prueba (Arrange)
-        // Usamos ID 0 porque MySQL lo auto-incrementará
-        Incidente incidentePrueba = new Incidente(0, "VIA_CERRADA", 3.4516, -76.5320, "Prueba unitaria JUnit");
+        // Usamos ID 0 porque MySQL lo auto-incrementará.
+        // La descripción es única para poder encontrar y borrar el registro al terminar.
+        String descripcion = "Prueba unitaria JUnit " + System.nanoTime();
+        Incidente incidentePrueba = new Incidente(0, "VIA_CERRADA", 3.4516, -76.5320, descripcion);
         int idUsuarioPrueba = 1; // Asumiendo que el usuario con ID 1 existe en la BD
 
         // 2. Ejecutar la acción a probar (Act)
         boolean resultado = incidenteDAO.registrarIncidente(incidentePrueba, idUsuarioPrueba);
 
-        // 3. Validar el resultado (Assert)
-        // assertTrue verifica que el método devolvió 'true' (inserción exitosa)
-        assertTrue(resultado, "El incidente debería registrarse correctamente en la base de datos.");
+        try {
+            // 3. Validar el resultado (Assert)
+            // assertTrue verifica que el método devolvió 'true' (inserción exitosa)
+            assertTrue(resultado, "El incidente debería registrarse correctamente en la base de datos.");
+        } finally {
+            // 4. Limpiar: la prueba no debe dejar marcadores repetidos en el mapa
+            borrarPorDescripcion(descripcion);
+        }
     }
 
     @Test
     public void testObtenerTodosLosIncidentes() {
-        // 1. Ejecutar la acción (Act)
-        List<Incidente> lista = incidenteDAO.obtenerTodosLosIncidentes();
+        // 1. Preparar: se registra un reporte propio para no depender de otra prueba
+        Incidente propio = crearIncidenteDePrueba("Prueba JUnit listar " + System.nanoTime());
+        try {
+            // 2. Ejecutar la acción (Act)
+            List<Incidente> lista = incidenteDAO.obtenerTodosLosIncidentes();
 
-        // 2. Validar el resultado (Assert)
-        // Comprobamos que la lista no sea nula (evita NullPointerException)
-        assertNotNull(lista, "La lista de incidentes no debería ser nula.");
-        
-        // Comprobamos que al menos traiga el registro que insertamos en la prueba anterior
-        assertTrue(lista.size() > 0, "Debería haber al menos un incidente registrado en la base de datos.");
+            // 3. Validar el resultado (Assert)
+            // Comprobamos que la lista no sea nula (evita NullPointerException)
+            assertNotNull(lista, "La lista de incidentes no debería ser nula.");
+
+            // Comprobamos que traiga el registro que acabamos de insertar
+            assertTrue(lista.stream().anyMatch(inc -> inc.getId() == propio.getId()),
+                    "La lista debería incluir el incidente recién registrado.");
+        } finally {
+            // 4. Limpiar
+            incidenteDAO.eliminarIncidente(propio.getId());
+        }
+    }
+
+    /** Borra los reportes con esa descripción (limpieza de las pruebas). */
+    private void borrarPorDescripcion(String descripcion) {
+        for (Incidente inc : incidenteDAO.obtenerTodosLosIncidentes()) {
+            if (descripcion.equals(inc.getDescripcion())) {
+                incidenteDAO.eliminarIncidente(inc.getId());
+            }
+        }
     }
 
     // ===== Equipo 3: pruebas de actualizar y eliminar reportes =====

@@ -22,6 +22,11 @@ public enum EstadoVia {
         return etiqueta;
     }
 
+    /** Estado al que pasa la vía cuando el usuario la reabre o la vuelve a cerrar. */
+    public EstadoVia opuesto() {
+        return this == ABIERTA ? CERRADA : ABIERTA;
+    }
+
     public static EstadoVia fromString(String valor) {
         if (valor == null) return CERRADA;
         for (EstadoVia ev : values()) {

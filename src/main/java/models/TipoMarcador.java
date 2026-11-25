@@ -14,6 +14,7 @@ public enum TipoMarcador {
     VIA_ABIERTA("Vía abierta", false),
     DERRUMBE("Derrumbe", true),
     ESTACION_MIO("Estación MIO", false),
+    ESTACION_MIO_NO_OPERATIVA("MIO no operativa", false),
     FALLA_SERVICIO("Falla de servicio", true),
     SIN_SENAL("Sin señal", true),
     DANO_ESTRUCTURAL("Daño estructural", true),
