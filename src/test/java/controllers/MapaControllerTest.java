@@ -1,5 +1,6 @@
 package controllers;
 
+import models.EstacionMio;
 import models.EstadoVia;
 import models.Incidente;
 import views.MapaView;
@@ -44,5 +45,14 @@ public class MapaControllerTest {
         assertEquals(MapaView.TEXTO_REABRIR_VIA, MapaController.textoBotonEstadoVia(cerrada));
         assertEquals(MapaView.TEXTO_CERRAR_VIA, MapaController.textoBotonEstadoVia(abierta));
         assertEquals(MapaView.TEXTO_REABRIR_VIA, MapaController.textoBotonEstadoVia(null));
+    }
+
+    @Test
+    public void testTextoDelBotonDeEstacion() {
+        EstacionMio operativa = new EstacionMio(1, "Estación Capri", 3.3958, -76.5449, true);
+        EstacionMio cerrada = new EstacionMio(2, "Estación Estadio", 3.4285, -76.5401, false);
+        assertEquals(MapaView.TEXTO_ESTACION_NO_OPERATIVA, MapaController.textoBotonEstadoEstacion(operativa));
+        assertEquals(MapaView.TEXTO_ESTACION_OPERATIVA, MapaController.textoBotonEstadoEstacion(cerrada));
+        assertEquals(MapaView.TEXTO_ESTACION_NO_OPERATIVA, MapaController.textoBotonEstadoEstacion(null));
     }
 }
