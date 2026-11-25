@@ -59,6 +59,7 @@ public class DashboardView extends JFrame {
  "Servicios por zona",
  "Cobertura móvil",
  "Validación comunitaria",
+ "Puntos de asistencia",
  "Cerrar sesión"
  };
  for (String item : items) {
