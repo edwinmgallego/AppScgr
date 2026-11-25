@@ -18,29 +18,69 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import models.EstadoVia;
+import java.sql.DatabaseMetaData;
+import java.sql.Statement;
 
 public class IncidenteDAO {
+    private static boolean columnaEstadoVerificada = false;
+
+    private void asegurarColumnaEstado(Connection conn) {
+        if (columnaEstadoVerificada) {
+            return;
+        }
+        try {
+            DatabaseMetaData meta = conn.getMetaData();
+            try (ResultSet rs = meta.getColumns(conn.getCatalog(), null, "reportes_incidentes", "estado")) {
+                if (!rs.next()) {
+                    try (Statement st = conn.createStatement()) {
+                        st.executeUpdate("ALTER TABLE reportes_incidentes ADD COLUMN estado VARCHAR(20) NOT NULL DEFAULT 'CERRADA'");
+                    }
+                }
+            }
+            corregirColumnaEstadoEnum(conn);
+            columnaEstadoVerificada = true;
+        } catch (SQLException e) {
+            System.err.println("Aviso DAO al verificar columna 'estado': " + e.getMessage());
+        }
+    }
+
+    /**
+     * La columna 'estado' la comparten el Equipo 3 (ABIERTA/CERRADA) y el Equipo 5
+     * (ACTIVO/RESUELTO). Si una versión anterior del script la creó como ENUM, los
+     * valores del Equipo 5 se rechazan; aquí se convierte a VARCHAR sin perder datos.
+     */
+    private void corregirColumnaEstadoEnum(Connection conn) throws SQLException {
+        String sql = "SELECT DATA_TYPE FROM information_schema.COLUMNS "
+                + "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'reportes_incidentes' AND COLUMN_NAME = 'estado'";
+        try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+            if (rs.next() && "enum".equalsIgnoreCase(rs.getString("DATA_TYPE"))) {
+                try (Statement alter = conn.createStatement()) {
+                    alter.executeUpdate("ALTER TABLE reportes_incidentes MODIFY COLUMN estado VARCHAR(20) NOT NULL DEFAULT 'CERRADA'");
+                }
+            }
+        }
+    }
 
     // Método CREATE: Inserta un nuevo incidente en la base de datos
     public boolean registrarIncidente(Incidente incidente, int idUsuarioLogueado) {
-        // Usamos ? para evitar Inyección SQL (Seguridad básica)
-        String sql = "INSERT INTO reportes_incidentes (usuario_id, tipo_incidente, descripcion, latitud, longitud) VALUES (?, ?, ?, ?, ?)";
-        
-        // El bloque try-with-resources asegura que los PreparedStatement se cierren automáticamente
-        try (Connection conn = ConexionDB.getInstance().getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            // Reemplazamos los signos de interrogación con los datos del objeto
-            pstmt.setInt(1, idUsuarioLogueado);
-            pstmt.setString(2, incidente.getTipo());
-            pstmt.setString(3, incidente.getDescripcion());
-            pstmt.setDouble(4, incidente.getLatitud());
-            pstmt.setDouble(5, incidente.getLongitud());
-            
-            // executeUpdate() devuelve el número de filas afectadas
-            int filasAfectadas = pstmt.executeUpdate();
-            return filasAfectadas > 0; // Retorna true si se guardó exitosamente
-            
+        String sql = "INSERT INTO reportes_incidentes (usuario_id, tipo_incidente, descripcion, latitud, longitud, estado) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = ConexionDB.getInstance().getConnection()) {
+            asegurarColumnaEstado(conn);
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, idUsuarioLogueado);
+                pstmt.setString(2, incidente.getTipo());
+                pstmt.setString(3, incidente.getDescripcion());
+                pstmt.setDouble(4, incidente.getLatitud());
+                pstmt.setDouble(5, incidente.getLongitud());
+                pstmt.setString(6, incidente.getEstadoVia() != null
+                        ? incidente.getEstadoVia().name()
+                        : EstadoVia.CERRADA.name());
+
+                int filasAfectadas = pstmt.executeUpdate();
+                return filasAfectadas > 0;
+            }
         } catch (SQLException e) {
             System.err.println("Error DAO al registrar el incidente: " + e.getMessage());
             return false;
@@ -50,33 +90,32 @@ public class IncidenteDAO {
     // Método READ: Consulta todos los incidentes para mostrarlos en el mapa o en una tabla
     public List<Incidente> obtenerTodosLosIncidentes() {
         List<Incidente> listaIncidentes = new ArrayList<>();
-        String sql = "SELECT id, tipo_incidente, latitud, longitud, descripcion FROM reportes_incidentes";
-        
-        try (Connection conn = ConexionDB.getInstance().getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-            
-            // Iteramos sobre los resultados de MySQL
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String tipo = rs.getString("tipo_incidente");
-                double latitud = rs.getDouble("latitud");
-                double longitud = rs.getDouble("longitud");
-                String descripcion = rs.getString("descripcion");
-                
-                // Instanciamos el objeto con los datos obtenidos
-                Incidente incidente = new Incidente(id, tipo, latitud, longitud, descripcion);
-                
-                // Lo agregamos a la lista
-                listaIncidentes.add(incidente);
+        String sql = "SELECT id, tipo_incidente, latitud, longitud, descripcion, estado FROM reportes_incidentes";
+
+        try (Connection conn = ConexionDB.getInstance().getConnection()) {
+            asegurarColumnaEstado(conn);
+            try (PreparedStatement pstmt = conn.prepareStatement(sql);
+                ResultSet rs = pstmt.executeQuery()) {
+
+                while (rs.next()) {
+                    int id = rs.getInt("id");
+                    String tipo = rs.getString("tipo_incidente");
+                    double latitud = rs.getDouble("latitud");
+                    double longitud = rs.getDouble("longitud");
+                    String descripcion = rs.getString("descripcion");
+                    EstadoVia estado = EstadoVia.fromString(rs.getString("estado"));
+
+                    Incidente incidente = new Incidente(id, tipo, latitud, longitud, descripcion, estado);
+                    listaIncidentes.add(incidente);
+                }
             }
-            
         } catch (SQLException e) {
             System.err.println("Error DAO al obtener los incidentes: " + e.getMessage());
         }
-        
+
         return listaIncidentes;
     }
+
     // Método UPDATE: Actualiza los detalles o coordenadas de un incidente existente
     public boolean actualizarIncidente(Incidente incidente) {
         String sql = "UPDATE reportes_incidentes SET tipo_incidente = ?, descripcion = ?, latitud = ?, longitud = ? WHERE id = ?";
@@ -97,6 +136,22 @@ public class IncidenteDAO {
             
         } catch (SQLException e) {
             System.err.println("Error DAO al actualizar el incidente: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean actualizarEstado(int idIncidente, EstadoVia nuevoEstado) {
+        String sql = "UPDATE reportes_incidentes SET estado = ? WHERE id = ?";
+
+        try (Connection conn = ConexionDB.getInstance().getConnection()) {
+            asegurarColumnaEstado(conn);
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, nuevoEstado != null ? nuevoEstado.name() : EstadoVia.CERRADA.name());
+                pstmt.setInt(2, idIncidente);
+                return pstmt.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error DAO al actualizar estado del incidente: " + e.getMessage());
             return false;
         }
     }

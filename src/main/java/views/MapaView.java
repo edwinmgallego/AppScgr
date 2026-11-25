@@ -1,26 +1,46 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package views;
 
 /**
  *
  * @author inged
  */
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
 
-
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.OSMTileFactoryInfo;
+import org.jxmapviewer.input.PanMouseInputListener;
+import org.jxmapviewer.input.ZoomMouseWheelListenerCursor;
 import org.jxmapviewer.viewer.DefaultTileFactory;
 import org.jxmapviewer.viewer.GeoPosition;
 import org.jxmapviewer.viewer.TileFactoryInfo;
 
-import javax.swing.*;
-import java.awt.*;
+import config.ConfiguracionMapa;
 
 public class MapaView extends JFrame {
+
+    public static final String TEXTO_REABRIR_VIA = "Marcar vía como abierta";
+    public static final String TEXTO_CERRAR_VIA = "Marcar vía como cerrada";
+    public static final String TEXTO_ESTACION_NO_OPERATIVA = "Marcar estación como no operativa";
+    public static final String TEXTO_ESTACION_OPERATIVA = "Marcar estación como operativa";
+
     private JXMapViewer mapViewer;
     private JComboBox<String> cbxTipoIncidente;
     private JTextArea txtDescripcion;
@@ -28,12 +48,20 @@ public class MapaView extends JFrame {
     private JTextField txtLongitud;
     private JButton btnGuardar;
     private JButton btnLimpiar;
+    private JButton btnActualizar;
+    private JButton btnEliminar;
+    private JButton btnCambiarEstadoVia; // RF-03: reabrir o volver a cerrar una vía
+    private JButton btnCambiarEstadoEstacion; // RF-03: operatividad de una estación del MIO
+    private JMenuItem itemRedFamiliar;
+    private JMenuItem itemEstado; // Equipo 2: reportar estado de supervivencia
+    private JMenuItem itemPerfil;
+    private JMenuItem itemCerrarSesion;
 
     public MapaView() {
         setTitle("Sistema de Asistencia en Emergencias");
-        System.setProperty("http.agent", "AppScgr-POO-Cali/1.0");
+        System.setProperty("http.agent", ConfiguracionMapa.USER_AGENT);
         setSize(900, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
         // --- 1. CONFIGURACIÓN DEL MAPA ---
@@ -41,12 +69,18 @@ public class MapaView extends JFrame {
         TileFactoryInfo info = new OSMTileFactoryInfo() {
             @Override
             public String getTileUrl(int x, int y, int zoom) {
-                return super.getTileUrl(x, y, zoom).replace("http://", "https://");
+                return ConfiguracionMapa.aHttps(super.getTileUrl(x, y, zoom));
             }
         };
         mapViewer.setTileFactory(new DefaultTileFactory(info));
-        mapViewer.setZoom(7);
-        mapViewer.setAddressLocation(new GeoPosition(3.4516, -76.5320)); // Cali
+        mapViewer.setZoom(ConfiguracionMapa.ZOOM_INICIAL);
+        mapViewer.setAddressLocation(new GeoPosition(ConfiguracionMapa.CALI_LATITUD, ConfiguracionMapa.CALI_LONGITUD)); // Cali
+
+        // JXMapViewer no trae interacción por defecto: hay que registrar el arrastre y el zoom
+        PanMouseInputListener arrastre = new PanMouseInputListener(mapViewer);
+        mapViewer.addMouseListener(arrastre);
+        mapViewer.addMouseMotionListener(arrastre);
+        mapViewer.addMouseWheelListener(new ZoomMouseWheelListenerCursor(mapViewer));
 
         // --- 2. CONFIGURACIÓN DEL FORMULARIO LATERAL (CRUD) ---
         JPanel panelCrud = new JPanel(new GridBagLayout());
@@ -58,44 +92,142 @@ public class MapaView extends JFrame {
         gbc.gridx = 0;
 
         // Tipo de Incidente
-        gbc.gridy = 0; panelCrud.add(new JLabel("Tipo de Incidente:"), gbc);
+        gbc.gridy = 0;
+        panelCrud.add(new JLabel("Tipo de Incidente:"), gbc);
         cbxTipoIncidente = new JComboBox<>(new String[]{"VIA_CERRADA", "DERRUMBE", "FALLA_SERVICIO", "SIN_SENAL", "DANO_ESTRUCTURAL"});
-        gbc.gridy = 1; panelCrud.add(cbxTipoIncidente, gbc);
+        gbc.gridy = 1;
+        panelCrud.add(cbxTipoIncidente, gbc);
 
         // Coordenadas (Capturadas por el mapa)
-        gbc.gridy = 2; panelCrud.add(new JLabel("Latitud (Clic en el mapa):"), gbc);
-        txtLatitud = new JTextField(); txtLatitud.setEditable(false);
-        gbc.gridy = 3; panelCrud.add(txtLatitud, gbc);
+        gbc.gridy = 2;
+        panelCrud.add(new JLabel("Latitud (Clic en el mapa):"), gbc);
+        txtLatitud = new JTextField();
+        txtLatitud.setEditable(false);
+        gbc.gridy = 3;
+        panelCrud.add(txtLatitud, gbc);
 
-        gbc.gridy = 4; panelCrud.add(new JLabel("Longitud (Clic en el mapa):"), gbc);
-        txtLongitud = new JTextField(); txtLongitud.setEditable(false);
-        gbc.gridy = 5; panelCrud.add(txtLongitud, gbc);
+        gbc.gridy = 4;
+        panelCrud.add(new JLabel("Longitud (Clic en el mapa):"), gbc);
+        txtLongitud = new JTextField();
+        txtLongitud.setEditable(false);
+        gbc.gridy = 5;
+        panelCrud.add(txtLongitud, gbc);
 
         // Descripción
-        gbc.gridy = 6; panelCrud.add(new JLabel("Descripción:"), gbc);
+        gbc.gridy = 6;
+        panelCrud.add(new JLabel("Descripción:"), gbc);
         txtDescripcion = new JTextArea(4, 20);
         txtDescripcion.setLineWrap(true);
-        gbc.gridy = 7; panelCrud.add(new JScrollPane(txtDescripcion), gbc);
+        gbc.gridy = 7;
+        panelCrud.add(new JScrollPane(txtDescripcion), gbc);
 
         // Botones
-        JPanel panelBotones = new JPanel(new GridLayout(1, 2, 5, 5));
+        JPanel panelBotones = new JPanel(new GridLayout(2, 2, 5, 5));
         btnGuardar = new JButton("Guardar");
         btnLimpiar = new JButton("Limpiar");
+        btnActualizar = new JButton("Actualizar");
+        btnEliminar = new JButton("Eliminar");
+        // Apagados hasta que el usuario seleccione un reporte del mapa
+        btnActualizar.setEnabled(false);
+        btnEliminar.setEnabled(false);
         panelBotones.add(btnGuardar);
         panelBotones.add(btnLimpiar);
-        gbc.gridy = 8; panelCrud.add(panelBotones, gbc);
+        panelBotones.add(btnActualizar);
+        panelBotones.add(btnEliminar);
+        gbc.gridy = 8;
+        panelCrud.add(panelBotones, gbc);
+
+        // Estado de la vía (RF-03): solo se activa al seleccionar una vía cerrada o un derrumbe
+        btnCambiarEstadoVia = new JButton(TEXTO_REABRIR_VIA);
+        btnCambiarEstadoVia.setEnabled(false);
+        gbc.gridy = 9;
+        panelCrud.add(btnCambiarEstadoVia, gbc);
+
+        // Operatividad del MIO (RF-03): solo se activa al hacer clic en una estación
+        btnCambiarEstadoEstacion = new JButton(TEXTO_ESTACION_NO_OPERATIVA);
+        btnCambiarEstadoEstacion.setEnabled(false);
+        gbc.gridy = 10;
+        panelCrud.add(btnCambiarEstadoEstacion, gbc);
+
+        // --- MENÚ DE CUENTA (Equipo 1: Autenticación y Red Familiar) ---
+        JMenuBar barraMenu = new JMenuBar();
+        JMenu menuCuenta = new JMenu("Cuenta");
+        itemRedFamiliar = new JMenuItem("Mi red familiar");
+        itemEstado = new JMenuItem("Reportar mi estado");
+        itemPerfil = new JMenuItem("Mi perfil");
+        itemCerrarSesion = new JMenuItem("Cerrar sesión");
+        menuCuenta.add(itemRedFamiliar);
+        menuCuenta.add(itemEstado);
+        menuCuenta.add(itemPerfil);
+        menuCuenta.addSeparator();
+        menuCuenta.add(itemCerrarSesion);
+        barraMenu.add(menuCuenta);
+        setJMenuBar(barraMenu);
 
         // --- 3. ENSAMBLAJE DE LA VENTANA ---
         add(mapViewer, BorderLayout.CENTER);
         add(panelCrud, BorderLayout.EAST);
+        add(new LeyendaMapaPanel(), BorderLayout.SOUTH);
     }
 
     // Getters para que el Controlador pueda acceder a los datos de la vista
-    public JXMapViewer getMapViewer() { return mapViewer; }
-    public JComboBox<String> getCbxTipoIncidente() { return cbxTipoIncidente; }
-    public JTextArea getTxtDescripcion() { return txtDescripcion; }
-    public JTextField getTxtLatitud() { return txtLatitud; }
-    public JTextField getTxtLongitud() { return txtLongitud; }
-    public JButton getBtnGuardar() { return btnGuardar; }
-    public JButton getBtnLimpiar() { return btnLimpiar; }
+    public JXMapViewer getMapViewer() {
+        return mapViewer;
+    }
+
+    public JComboBox<String> getCbxTipoIncidente() {
+        return cbxTipoIncidente;
+    }
+
+    public JTextArea getTxtDescripcion() {
+        return txtDescripcion;
+    }
+
+    public JTextField getTxtLatitud() {
+        return txtLatitud;
+    }
+
+    public JTextField getTxtLongitud() {
+        return txtLongitud;
+    }
+
+    public JButton getBtnGuardar() {
+        return btnGuardar;
+    }
+
+    public JButton getBtnLimpiar() {
+        return btnLimpiar;
+    }
+
+    public JButton getBtnActualizar() {
+        return btnActualizar;
+    }
+
+    public JButton getBtnEliminar() {
+        return btnEliminar;
+    }
+
+    public JButton getBtnCambiarEstadoVia() {
+        return btnCambiarEstadoVia;
+    }
+
+    public JButton getBtnCambiarEstadoEstacion() {
+        return btnCambiarEstadoEstacion;
+    }
+
+    public JMenuItem getItemRedFamiliar() {
+        return itemRedFamiliar;
+    }
+
+    public JMenuItem getItemEstado() {
+        return itemEstado;
+    }
+
+    public JMenuItem getItemPerfil() {
+        return itemPerfil;
+    }
+
+    public JMenuItem getItemCerrarSesion() {
+        return itemCerrarSesion;
+    }
 }

@@ -1,0 +1,245 @@
+
+package views;
+import config.ConfiguracionMapa;
+import org.jxmapviewer.JXMapViewer;
+import org.jxmapviewer.OSMTileFactoryInfo;
+import org.jxmapviewer.input.PanMouseInputListener;
+import org.jxmapviewer.input.ZoomMouseWheelListenerCursor;
+import org.jxmapviewer.viewer.DefaultTileFactory;
+import org.jxmapviewer.viewer.GeoPosition;
+import org.jxmapviewer.viewer.TileFactoryInfo;
+import java.awt.*;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+
+public class PuntoAsistenciaView extends JDialog {
+
+    private static final String[] TIPOS = {
+        "ALBERGUE", "CENTRO_ACOPIO", "SUPERMERCADO",
+        "MECANICO", "HOSPITAL"
+    };
+
+    private final JTextField txtNombre = new JTextField();
+    private final JTextField txtLatitud = new JTextField();
+    private final JTextField txtLongitud = new JTextField();
+    private final JTextField txtServicios = new JTextField();
+
+    private final JComboBox<String> cbxTipo = new JComboBox<>(TIPOS);
+    private final JComboBox<String> cbxEstado =
+            new JComboBox<>(new String[]{"ABIERTO", "CERRADO"});
+
+    private final JSpinner spnVoluntarios =
+            new JSpinner(new SpinnerNumberModel(0, 0, 999, 1));
+
+    private final JComboBox<String> cbxFiltroTipo;
+
+    private final DefaultTableModel modeloPuntos;
+    private final JTable tblPuntos;
+    private final JXMapViewer mapViewer = new JXMapViewer();
+
+    private final JButton btnNuevo = new JButton("Nuevo");
+    private final JButton btnGuardar = new JButton("Guardar");
+    private final JButton btnCambiarEstado =
+            new JButton("Abrir / cerrar");
+    private final JButton btnEliminar = new JButton("Eliminar");
+
+    public PuntoAsistenciaView(Frame padre) {
+        super(padre, "Puntos de asistencia", true);
+
+        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        setSize(1250, 700);
+        setLayout(new BorderLayout(8, 8));
+
+        JPanel panelForm = new JPanel(new GridLayout(0, 4, 8, 6));
+        panelForm.setBorder(BorderFactory.createTitledBorder("Datos del punto"));
+
+        panelForm.add(new JLabel("Nombre:"));
+        panelForm.add(txtNombre);
+
+        panelForm.add(new JLabel("Tipo:"));
+        panelForm.add(cbxTipo);
+
+        panelForm.add(new JLabel("Latitud:"));
+        panelForm.add(txtLatitud);
+
+        panelForm.add(new JLabel("Longitud:"));
+        panelForm.add(txtLongitud);
+
+        panelForm.add(new JLabel("Estado:"));
+        panelForm.add(cbxEstado);
+
+        panelForm.add(new JLabel("Voluntarios necesarios:"));
+        panelForm.add(spnVoluntarios);
+
+        panelForm.add(new JLabel("Servicios (separados por coma):"));
+        panelForm.add(txtServicios);
+
+        panelForm.add(new JLabel(""));
+        panelForm.add(new JLabel(""));
+
+        add(panelForm, BorderLayout.NORTH);
+
+        modeloPuntos = new DefaultTableModel(
+                new String[]{
+                    "ID", "Tipo", "Nombre", "Latitud",
+                    "Longitud", "Estado", "Servicios", "Voluntarios"
+                }, 0) {
+
+            @Override
+            public boolean isCellEditable(int fila, int columna) {
+                return false;
+            }
+        };
+
+        tblPuntos = new JTable(modeloPuntos);
+        modeloPuntos.addRow(new Object[]{1, "ALBERGUE", "Prueba 1", "3.4", "-76.5", "ABIERTO", "Agua", 2});
+        modeloPuntos.addRow(new Object[]{2, "HOSPITAL", "Prueba 2", "3.5", "-76.6", "CERRADO", "Internet", 0});
+            tblPuntos.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+        @Override
+        public Component getTableCellRendererComponent(
+                JTable tabla, Object valor, boolean seleccionado,
+                boolean enfocado, int fila, int columna) {
+
+            Component componente = super.getTableCellRendererComponent(
+                    tabla, valor, seleccionado, enfocado, fila, columna);
+
+            int columnaEstado = 4;
+
+            if (!seleccionado && columna == columnaEstado) {
+                if ("ABIERTO".equals(valor)) {
+                    componente.setForeground(new Color(0, 128, 0));
+                } else if ("CERRADO".equals(valor)) {
+                    componente.setForeground(Color.RED);
+                } else {
+                    componente.setForeground(Color.BLACK);
+                }
+            }
+
+            return componente;
+        }
+    });
+        tblPuntos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tblPuntos.removeColumn(tblPuntos.getColumnModel().getColumn(0));
+
+        JPanel panelLista = new JPanel(new BorderLayout(5, 5));
+
+        String[] filtros = new String[TIPOS.length + 1];
+        filtros[0] = "TODOS";
+
+        System.arraycopy(TIPOS, 0, filtros, 1, TIPOS.length);
+
+        cbxFiltroTipo = new JComboBox<>(filtros);
+
+        JPanel barraFiltro = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        barraFiltro.add(new JLabel("Filtrar por tipo:"));
+        barraFiltro.add(cbxFiltroTipo);
+
+        panelLista.add(barraFiltro, BorderLayout.NORTH);
+        panelLista.add(new JScrollPane(tblPuntos), BorderLayout.CENTER);
+
+        configurarMapa();
+        JSplitPane division = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panelLista, mapViewer);
+        division.setResizeWeight(0.5);
+        add(division, BorderLayout.CENTER);
+
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
+        panelBotones.add(btnNuevo);
+        panelBotones.add(btnGuardar);
+        panelBotones.add(btnCambiarEstado);
+        panelBotones.add(btnEliminar);
+
+        add(panelBotones, BorderLayout.SOUTH);
+
+        setLocationRelativeTo(padre);
+    }
+
+    public JTable getTblPuntos() {
+        return tblPuntos;
+    }
+
+    public DefaultTableModel getModeloPuntos() {
+        return modeloPuntos;
+    }
+
+    public JTextField getTxtNombre() {
+        return txtNombre;
+    }
+
+    public JTextField getTxtLatitud() {
+        return txtLatitud;
+    }
+
+    public JTextField getTxtLongitud() {
+        return txtLongitud;
+    }
+
+    public JComboBox<String> getCbxTipo() {
+        return cbxTipo;
+    }
+
+    public JComboBox<String> getCbxEstado() {
+        return cbxEstado;
+    }
+
+    public JTextField getTxtServicios() {
+        return txtServicios;
+    }
+
+    public JSpinner getSpnVoluntarios() {
+        return spnVoluntarios;
+    }
+
+    public JComboBox<String> getCbxFiltroTipo() {
+        return cbxFiltroTipo;
+    }
+
+    public JButton getBtnNuevo() {
+        return btnNuevo;
+    }
+
+    public JButton getBtnGuardar() {
+        return btnGuardar;
+    }
+
+    public JButton getBtnCambiarEstado() {
+        return btnCambiarEstado;
+    }
+
+    public JButton getBtnEliminar() {
+        return btnEliminar;
+    }
+
+    private void configurarMapa() {
+    // OpenStreetMap bloquea las peticiones que no se identifican
+    System.setProperty("http.agent", ConfiguracionMapa.USER_AGENT);
+    TileFactoryInfo info = new OSMTileFactoryInfo() {
+        @Override
+        public String getTileUrl(int x, int y, int zoom) {
+            return ConfiguracionMapa.aHttps(super.getTileUrl(x, y, zoom));
+        }
+    };
+    mapViewer.setTileFactory(new DefaultTileFactory(info));
+    mapViewer.setZoom(ConfiguracionMapa.ZOOM_INICIAL);
+    mapViewer.setAddressLocation(new GeoPosition(
+            ConfiguracionMapa.CALI_LATITUD, ConfiguracionMapa.CALI_LONGITUD));
+    PanMouseInputListener arrastre = new PanMouseInputListener(mapViewer);
+    mapViewer.addMouseListener(arrastre);
+    mapViewer.addMouseMotionListener(arrastre);
+    mapViewer.addMouseWheelListener(new ZoomMouseWheelListenerCursor(mapViewer));
+    mapViewer.setPreferredSize(new Dimension(500, 400));
+}
+
+public JXMapViewer getMapViewer() {
+    return mapViewer;
+}
+    
+    
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            PuntoAsistenciaView ventana = new PuntoAsistenciaView(null);
+            ventana.setVisible(true);
+        });
+    }
+}

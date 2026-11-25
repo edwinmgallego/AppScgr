@@ -11,19 +11,25 @@ package models;
 
 
 
-public class Incidente {
+public class Incidente implements Geolocalizable {
     private int id;
     private String tipo;
     private double latitud;
     private double longitud;
     private String descripcion;
+    private EstadoVia estadoVia;
 
     public Incidente(int id, String tipo, double latitud, double longitud, String descripcion) {
+        this(id, tipo, latitud, longitud, descripcion, EstadoVia.CERRADA);
+    }
+
+    public Incidente(int id, String tipo, double latitud, double longitud, String descripcion, EstadoVia estadoVia) {
         this.id = id;
         this.tipo = tipo;
         this.latitud = latitud;
         this.longitud = longitud;
         this.descripcion = descripcion;
+        this.estadoVia = (estadoVia != null) ? estadoVia : EstadoVia.CERRADA;
     }
 
     // Getters y Setters para el ID (Faltaban estos)
@@ -41,4 +47,25 @@ public class Incidente {
     
     public String getDescripcion() { return descripcion; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+
+    public EstadoVia getEstadoVia() { return estadoVia; }
+
+    public void setEstadoVia(EstadoVia estadoVia) {
+        this.estadoVia = (estadoVia != null) ? estadoVia : EstadoVia.CERRADA;
+    }
+
+    public boolean estaAbierta() { return this.estadoVia == EstadoVia.ABIERTA; }
+
+    /**
+     * Solo los cierres viales y los derrumbes tienen estado de vía (abierta/cerrada).
+     * Los demás tipos comparten la columna 'estado' con otro significado (Equipo 5).
+     */
+    public boolean afectaVia() {
+        TipoMarcador categoria = TipoMarcador.desdeTipoIncidente(tipo);
+        return categoria == TipoMarcador.VIA_CERRADA || categoria == TipoMarcador.DERRUMBE;
+    }
+
+    public void marcarComoReabierta() { this.estadoVia = EstadoVia.ABIERTA; }
+
+    public void marcarComoCerrada() { this.estadoVia = EstadoVia.CERRADA; }
 }

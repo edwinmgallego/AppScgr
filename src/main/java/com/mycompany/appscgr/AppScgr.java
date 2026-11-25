@@ -4,9 +4,12 @@
 
 package com.mycompany.appscgr;
 
-import controllers.MapaController;
+import controllers.LoginController;
 import javax.swing.SwingUtilities;
-import views.MapaView;
+import views.LoginView;
+import utils.ActualizadorBD; 
+import utils.VerificadorBD;
+
 
 /**
  *
@@ -15,10 +18,11 @@ import views.MapaView;
 public class AppScgr {
 
     public static void main(String[] args) {
-     SwingUtilities.invokeLater(() -> {
-            MapaView vista = new MapaView();
-            MapaController controlador = new MapaController(vista);
-            controlador.iniciar();
-        });
+        // Si MySQL está encendido, se revisa que la base tenga la columna de la red familiar
+        if (VerificadorBD.mysqlEncendido()) {
+            ActualizadorBD.actualizar();
+        }
+        // La aplicación arranca en el login; si es correcto, LoginController abre el mapa
+        SwingUtilities.invokeLater(() -> new LoginController(new LoginView()).iniciar());
     }
 }
