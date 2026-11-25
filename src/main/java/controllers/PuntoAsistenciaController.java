@@ -1,5 +1,11 @@
 package controllers;
 
+
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Locale;
+import models.MarcadorMapa;
+import org.jxmapviewer.viewer.GeoPosition;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
@@ -39,6 +45,14 @@ public class PuntoAsistenciaController {
         vista.getBtnCambiarEstado().addActionListener(e -> cambiarEstado());
         vista.getBtnEliminar().addActionListener(e -> eliminar());
         vista.getCbxFiltroTipo().addActionListener(e -> mostrarTabla());
+        vista.getMapViewer().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON1) {
+                    usarPuntoDelMapa(e);
+                }
+            }
+        });
         vista.getTblPuntos().getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 mostrarSeleccionado();
@@ -137,6 +151,15 @@ public class PuntoAsistenciaController {
         }
     }
 
+        // Un clic izquierdo en el mapa llena latitud y longitud del formulario
+    private void usarPuntoDelMapa(MouseEvent e) {
+        GeoPosition posicion = vista.getMapViewer().convertPointToGeoPosition(e.getPoint());
+        // Al arrastrar el mapa, la longitud puede salirse de [-180, 180]
+        double longitud = MarcadorMapa.normalizarLongitud(posicion.getLongitude());
+        vista.getTxtLatitud().setText(String.format(Locale.US, "%.6f", posicion.getLatitude()));
+        vista.getTxtLongitud().setText(String.format(Locale.US, "%.6f", longitud));
+    }
+    
     // UPDATE: abre el punto si está cerrado y lo cierra si está abierto (RF-09)
     private void cambiarEstado() {
         PuntoAsistencia p = seleccionado();
