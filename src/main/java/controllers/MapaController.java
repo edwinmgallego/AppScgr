@@ -10,6 +10,7 @@ import models.MarcadorMapa;
 import models.TipoMarcador;
 import models.dao.IncidenteDAO;
 import models.EstacionMio;
+import models.Geolocalizable;
 import models.EstadoVia;
 import models.dao.EstacionMioDAO;
 import views.EstadoView;
@@ -48,6 +49,8 @@ public class MapaController {
     private EstadoController estadoController; // Equipo 2: se crea la primera vez que se abre
     private EstacionMioDAO estacionMioDAO;
     private final List<MarcadorMapa> marcadoresEstaciones = new ArrayList<>();
+    private final List<EstacionMio> estaciones = new ArrayList<>();
+    private EstacionMio estacionSeleccionada; // null = no hay estación del MIO seleccionada
 
     public MapaController(MapaView vista) {
         this.vista = vista;
@@ -70,6 +73,11 @@ public class MapaController {
                     if (cercano != null) {
                         cargarEnFormulario(cercano);
                         return; // Se hizo clic en un reporte existente
+                    }
+                    EstacionMio estacion = buscarCerca(estaciones, e.getPoint());
+                    if (estacion != null) {
+                        cargarEstacion(estacion);
+                        return; // Se hizo clic en una estación del MIO (RF-03)
                     }
                     // Convertir el punto del píxel de la pantalla a coordenadas GPS
                     GeoPosition posicion = vista.getMapViewer().convertPointToGeoPosition(e.getPoint());
@@ -125,6 +133,9 @@ public class MapaController {
 
         // EVENTO 3.3: Reabrir o volver a cerrar la vía seleccionada (RF-03) - Equipo 3
         vista.getBtnCambiarEstadoVia().addActionListener(e -> alternarEstadoVia());
+
+        // EVENTO 3.4: Marcar la estación del MIO seleccionada como operativa o no (RF-03) - Equipo 3
+        vista.getBtnCambiarEstadoEstacion().addActionListener(e -> alternarEstadoEstacion());
 
         // EVENTO 4: Abrir la red familiar (Equipo 1)
         vista.getItemRedFamiliar().addActionListener(e -> new FamiliaresController(new FamiliaresView(vista)).iniciar());
@@ -299,15 +310,24 @@ public class MapaController {
 
     /** Busca el reporte cuyo marcador está más cerca del clic, o null si no hay ninguno cerca. */
     private Incidente buscarIncidenteCerca(Point clic) {
-        Incidente masCercano = null;
+        return buscarCerca(incidentes, clic);
+    }
+
+    /**
+     * Busca el elemento (incidente, estación...) cuyo marcador está más cerca del clic,
+     * o null si ninguno está a menos de DISTANCIA_CLIC_PX píxeles. Sirve para cualquier
+     * clase que implemente Geolocalizable.
+     */
+    private <T extends Geolocalizable> T buscarCerca(List<T> elementos, Point clic) {
+        T masCercano = null;
         double menorDistancia = DISTANCIA_CLIC_PX;
-        for (Incidente inc : incidentes) {
+        for (T elemento : elementos) {
             Point2D punto = vista.getMapViewer().convertGeoPositionToPoint(
-                    new GeoPosition(inc.getLatitud(), inc.getLongitud()));
+                    new GeoPosition(elemento.getLatitud(), elemento.getLongitud()));
             double distancia = punto.distance(clic);
             if (distancia <= menorDistancia) {
                 menorDistancia = distancia;
-                masCercano = inc;
+                masCercano = elemento;
             }
         }
         return masCercano;
@@ -315,6 +335,7 @@ public class MapaController {
 
     /** Llena el formulario con un reporte existente y activa Actualizar/Eliminar. */
     private void cargarEnFormulario(Incidente inc) {
+        soltarEstacion();
         incidenteSeleccionado = inc;
         vista.getCbxTipoIncidente().setSelectedItem(inc.getTipo());
         vista.getTxtDescripcion().setText(inc.getDescripcion());
@@ -326,6 +347,43 @@ public class MapaController {
         vista.getBtnCambiarEstadoVia().setEnabled(inc.afectaVia());
         vista.getBtnCambiarEstadoVia().setText(textoBotonEstadoVia(inc));
         seleccionarPunto(inc.getLatitud(), inc.getLongitud());
+    }
+
+    /** Selecciona una estación del MIO para poder cambiar su operatividad (RF-03). */
+    private void cargarEstacion(EstacionMio est) {
+        limpiarFormulario(); // deja el formulario de reportes como nuevo
+        estacionSeleccionada = est;
+        vista.getBtnCambiarEstadoEstacion().setEnabled(true);
+        vista.getBtnCambiarEstadoEstacion().setText(textoBotonEstadoEstacion(est));
+        seleccionarPunto(est.getLatitud(), est.getLongitud());
+    }
+
+    /** Quita la estación seleccionada y apaga su botón. */
+    private void soltarEstacion() {
+        estacionSeleccionada = null;
+        vista.getBtnCambiarEstadoEstacion().setEnabled(false);
+        vista.getBtnCambiarEstadoEstacion().setText(MapaView.TEXTO_ESTACION_NO_OPERATIVA);
+    }
+
+    /** Marca la estación seleccionada como operativa o no operativa y refresca el mapa (RF-03). */
+    private void alternarEstadoEstacion() {
+        if (estacionSeleccionada == null) {
+            return;
+        }
+        boolean nuevoEstado = !estacionSeleccionada.isOperativa();
+        String nombre = estacionSeleccionada.getNombre();
+        if (estacionMioDAO.actualizarEstado(estacionSeleccionada.getId(), nuevoEstado)) {
+            JOptionPane.showMessageDialog(vista, nombre + " quedó marcada como " + (nuevoEstado ? "operativa" : "no operativa") + ".");
+            limpiarFormulario();
+            cargarEstacionesEnMapa(); // La estación cambia de color en el mapa
+        } else {
+            JOptionPane.showMessageDialog(vista, "Error al cambiar el estado de la estación.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /** Texto del botón de la estación según si hoy está operativa o no. */
+    static String textoBotonEstadoEstacion(EstacionMio est) {
+        return est != null && !est.isOperativa() ? MapaView.TEXTO_ESTACION_OPERATIVA : MapaView.TEXTO_ESTACION_NO_OPERATIVA;
     }
 
     /** Texto del botón de estado de vía según el estado actual del reporte. */
@@ -358,6 +416,7 @@ public class MapaController {
         vista.getBtnEliminar().setEnabled(false);
         vista.getBtnCambiarEstadoVia().setEnabled(false);
         vista.getBtnCambiarEstadoVia().setText(MapaView.TEXTO_REABRIR_VIA);
+        soltarEstacion();
         limpiarSeleccion();
     }
 
@@ -370,9 +429,11 @@ public class MapaController {
 
     private void cargarEstacionesEnMapa() {
         marcadoresEstaciones.clear();
+        estaciones.clear();
         for (EstacionMio est : estacionMioDAO.listarTodas()) {
             try {
                 marcadoresEstaciones.add(MarcadorMapa.desdeEstacion(est));
+                estaciones.add(est); // Se guarda para poder encontrarla al hacer clic
             } catch (IllegalArgumentException ex) {
                 System.err.println("Estación " + est.getId() + " omitida: " + ex.getMessage());
             }
